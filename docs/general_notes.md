@@ -10,6 +10,10 @@
 
 RobioRio 2.0 Controller Board Ethernet <-> [Open-Mesh OM5P-AC FIRST Robotics Competition Robot Radio](FIRST Robotics Competition Radio Open-Mesh OM5P-AC)
 
+### 2025 update
+
+It appears that Open-Mesh OM5P-AC may not be legal this year (https://community.firstinspires.org/2025-legal-devices) so may need to consider [VH-109 FRC Radio](https://frc-radio.vivid-hosting.net/getting-started/2025-season)
+There may not be a need to include power injection ([link](https://frc-radio.vivid-hosting.net/getting-started/usage/wiring-your-radio#powering-your-radio))
 
 ## Software
 
