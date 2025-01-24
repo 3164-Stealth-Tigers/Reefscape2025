@@ -5,6 +5,9 @@
 - [Programming your Radio](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-3/radio-programming.html)
 - [Deploy Python program to roboRIO](https://docs.wpilib.org/en/stable/docs/software/python/subcommands/deploy.html)
 - [Introduction to Robot Simulation](https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/introduction.html)
+- [WPILib Installation Guide for 2025](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html)
+- [Imaging the roboRio 2.0](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-3/roborio2-imaging.html)
+- 
 
 ## Communications Setup
 
@@ -28,3 +31,4 @@ There may not be a need to include power injection ([link](https://frc-radio.viv
 ## How to connect to Robot
 1. Power up robot
 1. Search for wifi connection with SSID: 3164
+1. The FRC Driver station will show you the IP Address of the roboRio Controller. You can access the web interface directly (ex: http://10.31.64.2/#!/SystemConfig)
