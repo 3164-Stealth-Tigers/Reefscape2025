@@ -52,3 +52,8 @@ Download the firmware which is part of the [FRC Game Tools Software](https://www
 - Install RoboPy - open cmd and then 
 	 - py -3 -m pip install robotpy
 
+
+## How to program radio
+
+- [Quick Start Guide](https://frc-radio.vivid-hosting.net/overview/quick-start-guide)
+
