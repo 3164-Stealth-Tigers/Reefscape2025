@@ -21,6 +21,13 @@ There may not be a need to include power injection ([link](https://frc-radio.viv
 # Firmware Flashing Software
 
 Download the firmware which is part of the [FRC Game Tools Software](https://www.ni.com/en/support/downloads/drivers/download.frc-game-tools.html). We have no team login so you can create a personal account or download the binary from this repo.
+## RoboRio 1.0
+
+1. Connect power to RoboRio and USB cable
+1. Open RoboRio Imaging Tool
+1. Team Number 3164, "Format Target"* and Select the Image (in this case for 2025 it is FRC_roboRIO_2025_v2.0.zip)
+1. Click on Reformat
+* It is unclear at this time, but maybe during the season if there is a firmware update we may "Update Firmware" rather than "Format Target". We should verify this.
 
 ## Software
 
