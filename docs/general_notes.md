@@ -45,4 +45,10 @@ Download the firmware which is part of the [FRC Game Tools Software](https://www
 1. The FRC Driver station will show you the IP Address of the roboRio Controller. You can access the web interface directly (ex: http://10.31.64.2/#!/SystemConfig)
 
 
+## How to Configure environment for Python
+
+- [FRC Python Programming](https://docs.wpilib.org/en/stable/docs/software/python/index.html)
+- Install Python - [Version 3.12](https://www.python.org/downloads/windows/)
+- Install RoboPy - open cmd and then 
+	 - py -3 -m pip install robotpy
 
