@@ -5,6 +5,7 @@ import rev
 import wpilib
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim
 from wpimath.system.plant import DCMotor, LinearSystemId
+from wpiutil import SendableBuilder, Sendable
 
 from constants import ElevatorConstants
 
@@ -26,7 +27,7 @@ class Elevator(commands2.Subsystem):
         gearbox = DCMotor.NEO(2)
         self.motor_sim = rev.SparkMaxSim(self.motor, gearbox)
         plant = LinearSystemId.elevatorSystem(gearbox, 9, 0.8125 / 39.37, 5.45)
-        self.elevator_sim = ElevatorSim(plant, gearbox, 0, 3, True, 0)
+        self.elevator_sim = ElevatorSim(plant, gearbox, 0.1524, 3, True, 0)
 
         # Visual display of the elevator
         mech = wpilib.Mechanism2d(3, 4)
@@ -38,35 +39,35 @@ class Elevator(commands2.Subsystem):
         wpilib.SmartDashboard.putData("Mech", mech)
 
     def simulationPeriodic(self) -> None:
-        self.elevator_sim.setInput(self.motor_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
+        self.elevator_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
 
         self.elevator_sim.update(0.02)
 
         self.motor_sim.iterate(
-            self.elevator_sim.getVelocity() * (1.625 / 39.37) * math.pi / 60,  # Convert from m/s to rotations per min
+            self.elevator_sim.getVelocity(),
             RoboRioSim.getVInVoltage(),
             0.02
         )
 
-        RoboRioSim.setVInVoltage(BatterySim.calculate(self.elevator_sim.getCurrentDraw()))
+        RoboRioSim.setVInVoltage(BatterySim.calculate([self.elevator_sim.getCurrentDraw()]))
 
-        self.elevator.setLength(0.1524 + self.elevator_sim.getPosition())
+        self.elevator.setLength(self.elevator_sim.getPosition())
 
     def config(self):
         motor_config = rev.SparkBaseConfig()
 
         motor_config.encoder \
-            .positionConversionFactor(1) \
-            .velocityConversionFactor(1)
+            .positionConversionFactor((1.625 / 39.37) * math.pi / 5.45) \
+            .velocityConversionFactor((1.625 / 39.37) * math.pi / 5.45 / 60)
 
         motor_config.closedLoop \
-            .pid(0.4, 0, 0) \
+            .pid(10, 0, 0) \
             .outputRange(-1, 1)
 
         motor_config.closedLoop.maxMotion \
-            .maxVelocity(1000) \
-            .maxAcceleration(1000) \
-            .allowedClosedLoopError(1)  # Affected by position conversion factor
+            .maxVelocity(1) \
+            .maxAcceleration(10) \
+            .allowedClosedLoopError(0.01)  # Affected by position conversion factor
 
         self.motor.configure(
             motor_config,
@@ -76,7 +77,7 @@ class Elevator(commands2.Subsystem):
 
     def set_height(self, height: float):
         # Use MAXMotion for smoother position control
-        self.controller.setReference(height, rev.SparkBase.ControlType.kMAXMotionPositionControl)
+        self.controller.setReference(height, rev.SparkBase.ControlType.kPosition)  # rev.SparkBase.ControlType.kMAXMotionPositionControl
 
     def set_duty_cycle(self, output: float):
         self.motor.set(output)
@@ -84,3 +85,6 @@ class Elevator(commands2.Subsystem):
     def lower_limit(self) -> bool:
         return self.limit_switch.get()
 
+    def initSendable(self, builder: SendableBuilder) -> None:
+        builder.setSmartDashboardType("Elevator")
+        builder.addDoubleProperty("Height", lambda: self.encoder.getPosition() + 0.1524, lambda _: None)
