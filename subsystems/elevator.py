@@ -13,6 +13,7 @@ from constants import ElevatorConstants
 class Elevator(commands2.Subsystem):
     def __init__(self):
         super().__init__()
+        self.setName("Elevator")
 
         # Initialize SPARK MAX
         self.motor = rev.SparkMax(ElevatorConstants.LEFT_MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
@@ -31,9 +32,9 @@ class Elevator(commands2.Subsystem):
 
         # Visual display of the elevator
         mech = wpilib.Mechanism2d(3, 4)
-        root = mech.getRoot("robot", 2, 0)
+        root = mech.getRoot("elevator", 2, 0)
         self.elevator = root.appendLigament(
-            "elevator", 0.1524, 90
+            "carriage", 0.1524, 90
         )
 
         wpilib.SmartDashboard.putData("Mech", mech)
@@ -86,5 +87,4 @@ class Elevator(commands2.Subsystem):
         return self.limit_switch.get()
 
     def initSendable(self, builder: SendableBuilder) -> None:
-        builder.setSmartDashboardType("Elevator")
         builder.addDoubleProperty("Height", lambda: self.encoder.getPosition() + 0.1524, lambda _: None)
