@@ -6,7 +6,7 @@
 [tool.robotpy]
 
 # Version of robotpy this project depends on
-robotpy_version = "2025.2.1.2"
+robotpy_version = "2025.3.1.0"
 
 # Which extra RobotPy components should be installed
 # -> equivalent to `pip install robotpy[extra1, ...]
@@ -26,4 +26,4 @@ robotpy_extras = [
 ]
 
 # Other pip packages to install
-requires = ["Pint"]
+requires = ["Pint", "robotpy-playingwithfusion"]

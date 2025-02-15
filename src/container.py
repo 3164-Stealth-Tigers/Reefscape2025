@@ -1,15 +1,30 @@
 from commands2 import Command, InstantCommand
-from commands2.button import CommandXboxController, CommandPS4Controller
 from wpilib import DriverStation, SmartDashboard
 
+from commands.swerve import ski_stop_command
+from constants import DrivingConstants
+from oi import XboxDriver, PS4Driver
 from subsystems.elevator import Elevator
+from swerve_config import SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS
+from swervepy import SwerveDrive
 
 
 class RobotContainer:
     def __init__(self):
         DriverStation.silenceJoystickConnectionWarning(True)
 
-        self.joystick = CommandXboxController(0)
+        self.joystick = XboxDriver(0)
+
+        # Configure drivetrain
+        self.swerve = SwerveDrive(SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS)
+        self.teleop_drive_command = self.swerve.teleop_command(
+            self.joystick.forward,
+            self.joystick.strafe,
+            self.joystick.turn,
+            DrivingConstants.FIELD_RELATIVE,
+            DrivingConstants.OPEN_LOOP,
+        )
+        self.swerve.setDefaultCommand(self.teleop_drive_command)
 
         # Configure elevator subsystem
         self.elevator = Elevator()
@@ -22,7 +37,12 @@ class RobotContainer:
         return Command()
 
     def configure_button_bindings(self):
+        # Driving buttons
+        self.joystick.reset_gyro.onTrue(InstantCommand(self.swerve.zero_heading))
+        self.joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
+        self.joystick.ski_stop.onTrue(ski_stop_command(self.swerve).until(self.joystick.is_movement_commanded))
+
         # Elevator buttons
-        self.joystick.a().onTrue(InstantCommand(lambda: self.elevator.set_height(1)))
-        self.joystick.x().onTrue(InstantCommand(lambda: self.elevator.set_height(2)))
-        self.joystick.y().onTrue(InstantCommand(lambda: self.elevator.set_height(3)))
+        self.joystick.stick.povDown().onTrue(InstantCommand(lambda: self.elevator.set_height(1)))
+        self.joystick.stick.povLeft().onTrue(InstantCommand(lambda: self.elevator.set_height(2)))
+        self.joystick.stick.povUp().onTrue(InstantCommand(lambda: self.elevator.set_height(3)))
