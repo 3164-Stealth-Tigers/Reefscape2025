@@ -1,3 +1,6 @@
+from swervepy import u
+
+
 class DrivingConstants:
     OPEN_LOOP = True
     FIELD_RELATIVE = True
@@ -6,6 +9,18 @@ class DrivingConstants:
 class ElevatorConstants:
     LEFT_MOTOR_ID = 9
     RIGHT_MOTOR_ID = 10
+    INVERT_LEFT_MOTOR = False
+    INVERT_RIGHT_MOTOR = True
+
+    LOWER_LIMIT_SWITCH_ID = 0
+
+    # Physical measurements
+    PULLEY_DIAMETER = (1.625 * u.inch).m_as(u.m)
+    CARRIAGE_MASS = 9
+    GEAR_RATIO = 5.45
+
+    MINIMUM_CARRIAGE_HEIGHT = 0
+    MAXIMUM_CARRIAGE_HEIGHT = 3
 
 
 class ClawConstants:
