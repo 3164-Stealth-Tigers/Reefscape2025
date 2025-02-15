@@ -31,13 +31,13 @@ class Elevator(commands2.Subsystem):
         self.elevator_sim = ElevatorSim(plant, gearbox, 0.1524, 3, True, 0)
 
         # Visual display of the elevator
-        mech = wpilib.Mechanism2d(3, 4)
-        root = mech.getRoot("elevator", 2, 0)
-        self.elevator = root.appendLigament(
-            "carriage", 0.1524, 90
+        mech = wpilib.Mechanism2d(3, 4)  # Create a rectangle (the 'frame' of the elevator)
+        root = mech.getRoot("elevator", 2, 0)  # Set the anchor point (root/starting point)
+        self.elevator = root.appendLigament(  # Create the carriage of the elevator
+           "carriage", 0.1524, 90  # This is what we see (the orange box)
         )
 
-        wpilib.SmartDashboard.putData("Mech", mech)
+        wpilib.SmartDashboard.putData("Mech", mech)  # Displays box (elevator indicator)
 
     def simulationPeriodic(self) -> None:
         self.elevator_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
