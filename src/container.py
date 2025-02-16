@@ -1,9 +1,11 @@
-from commands2 import Command, InstantCommand
+from commands2 import Command, InstantCommand, RunCommand
 from wpilib import DriverStation, SmartDashboard
+from wpimath.geometry import Rotation2d
 
 from commands.swerve import ski_stop_command
 from constants import DrivingConstants
 from oi import XboxDriver, PS4Driver
+from subsystems.arm import Arm
 from subsystems.elevator import Elevator
 from swerve_config import SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS
 from swervepy import SwerveDrive
@@ -30,6 +32,9 @@ class RobotContainer:
         self.elevator = Elevator()
         SmartDashboard.putData("Elevator", self.elevator)
 
+        # Configure arm subsystem
+        self.arm = Arm()
+
         # Button bindings must be configured after every subsystem has been set up
         self.configure_button_bindings()
 
@@ -43,6 +48,11 @@ class RobotContainer:
         self.joystick.ski_stop.onTrue(ski_stop_command(self.swerve).until(self.joystick.is_movement_commanded))
 
         # Elevator buttons
-        self.joystick.stick.povDown().onTrue(InstantCommand(lambda: self.elevator.set_height(1)))
-        self.joystick.stick.povLeft().onTrue(InstantCommand(lambda: self.elevator.set_height(2)))
-        self.joystick.stick.povUp().onTrue(InstantCommand(lambda: self.elevator.set_height(3)))
+        self.joystick.stick.povDown().onTrue(InstantCommand(lambda: self.elevator.set_height(1), self.elevator))
+        self.joystick.stick.povLeft().onTrue(InstantCommand(lambda: self.elevator.set_height(2), self.elevator))
+        self.joystick.stick.povUp().onTrue(InstantCommand(lambda: self.elevator.set_height(3), self.elevator))
+
+        # Arm buttons
+        self.joystick.stick.square().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(30)), self.arm))
+        self.joystick.stick.circle().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
+        self.joystick.stick.cross().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(-45)), self.arm))

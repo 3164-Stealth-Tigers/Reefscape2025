@@ -3,11 +3,13 @@ import math
 import commands2
 import rev
 import wpilib
+from wpilib import RobotController
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
 from constants import ElevatorConstants
+from sim_helper import SimHelper
 
 
 class Elevator(commands2.Subsystem):
@@ -53,7 +55,7 @@ class Elevator(commands2.Subsystem):
             "carriage", self.elevator_sim.getPosition(), 90
         )
 
-        wpilib.SmartDashboard.putData("Mech", mech)
+        wpilib.SmartDashboard.putData("Elevator Mechanism", mech)
 
     def periodic(self) -> None:
         self.elevator.setLength(self.carriage_height())
@@ -69,7 +71,7 @@ class Elevator(commands2.Subsystem):
             0.02
         )
 
-        RoboRioSim.setVInVoltage(BatterySim.calculate([self.elevator_sim.getCurrentDraw()]))
+        SimHelper.add_simulated_current_load(RobotController.getTime(), self.elevator_sim.getCurrentDraw())
 
     def config(self):
         global_config = rev.SparkBaseConfig()
