@@ -3,11 +3,13 @@ import math
 import commands2
 import rev
 import wpilib
+from wpilib import RobotController
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
 from constants import ElevatorConstants
+from sim_helper import SimHelper
 
 
 class Elevator(commands2.Subsystem):
@@ -15,29 +17,48 @@ class Elevator(commands2.Subsystem):
         super().__init__()
         self.setName("Elevator")
 
-        # Initialize SPARK MAX
-        self.motor = rev.SparkMax(ElevatorConstants.LEFT_MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
-        self.controller = self.motor.getClosedLoopController()
-        self.encoder = self.motor.getEncoder()
-        self.config()
+        # Initialize primary SPARK MAX
+        self.leader = rev.SparkMax(ElevatorConstants.LEFT_MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
+        self.controller = self.leader.getClosedLoopController()
+        self.encoder = self.leader.getEncoder()
+
+        # Initialize follower SPARK MAX
+        self.follower = rev.SparkMax(ElevatorConstants.RIGHT_MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
 
         # Magnetic limit switch for lower limit and homing
-        self.limit_switch = wpilib.DigitalInput(0)
+        self.limit_switch = wpilib.DigitalInput(ElevatorConstants.LOWER_LIMIT_SWITCH_ID)
+
+        self.config()
 
         # Setup mechanism and gearbox for simulation
         gearbox = DCMotor.NEO(2)
-        self.motor_sim = rev.SparkMaxSim(self.motor, gearbox)
-        plant = LinearSystemId.elevatorSystem(gearbox, 9, 0.8125 / 39.37, 5.45)
-        self.elevator_sim = ElevatorSim(plant, gearbox, 0.1524, 3, True, 0)
-
-        # Visual display of the elevator
-        mech = wpilib.Mechanism2d(3, 4)  # Create a rectangle (the 'frame' of the elevator)
-        root = mech.getRoot("elevator", 2, 0)  # Set the anchor point (root/starting point)
-        self.elevator = root.appendLigament(  # Create the carriage of the elevator
-           "carriage", 0.1524, 90  # This is what we see (the orange box)
+        self.motor_sim = rev.SparkMaxSim(self.leader, gearbox)
+        plant = LinearSystemId.elevatorSystem(
+            gearbox,
+            ElevatorConstants.CARRIAGE_MASS,
+            ElevatorConstants.PULLEY_DIAMETER / 2,
+            ElevatorConstants.GEAR_RATIO,
+        )
+        self.elevator_sim = ElevatorSim(
+            plant,
+            gearbox,
+            ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT,
+            ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT,
+            True,
+            0,
         )
 
-        wpilib.SmartDashboard.putData("Mech", mech)  # Displays box (elevator indicator)
+        # Visual display of the elevator
+        mech = wpilib.Mechanism2d(3, 4)
+        root = mech.getRoot("elevator", 2, 0)
+        self.elevator = root.appendLigament(
+            "carriage", self.elevator_sim.getPosition(), 90
+        )
+
+        wpilib.SmartDashboard.putData("Elevator Mechanism", mech)
+
+    def periodic(self) -> None:
+        self.elevator.setLength(self.carriage_height())
 
     def simulationPeriodic(self) -> None:
         self.elevator_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
@@ -50,30 +71,43 @@ class Elevator(commands2.Subsystem):
             0.02
         )
 
-        RoboRioSim.setVInVoltage(BatterySim.calculate([self.elevator_sim.getCurrentDraw()]))
-
-        self.elevator.setLength(self.elevator_sim.getPosition())
+        SimHelper.add_simulated_current_load(RobotController.getTime(), self.elevator_sim.getCurrentDraw())
 
     def config(self):
-        motor_config = rev.SparkBaseConfig()
+        global_config = rev.SparkBaseConfig()
 
-        motor_config.encoder \
-            .positionConversionFactor((1.625 / 39.37) * math.pi / 5.45) \
-            .velocityConversionFactor((1.625 / 39.37) * math.pi / 5.45 / 60)
+        global_config.encoder \
+            .positionConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO) \
+            .velocityConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO / 60)
 
-        motor_config.closedLoop \
+        global_config.closedLoop \
             .pid(10, 0, 0) \
             .outputRange(-1, 1)
 
-        motor_config.closedLoop.maxMotion \
+        global_config.closedLoop.maxMotion \
             .maxVelocity(1) \
             .maxAcceleration(10) \
             .allowedClosedLoopError(0.01)  # Affected by position conversion factor
 
-        self.motor.configure(
-            motor_config,
+        leader_config = rev.SparkBaseConfig()
+        leader_config \
+            .apply(global_config) \
+            .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
+
+        follower_config = rev.SparkBaseConfig()
+        follower_config \
+            .apply(global_config) \
+            .inverted(ElevatorConstants.INVERT_RIGHT_MOTOR)
+
+        self.leader.configure(
+            leader_config,
             rev.SparkBase.ResetMode.kResetSafeParameters,
-            rev.SparkBase.PersistMode.kNoPersistParameters,
+            rev.SparkBase.PersistMode.kPersistParameters,
+        )
+        self.follower.configure(
+            follower_config,
+            rev.SparkBase.ResetMode.kResetSafeParameters,
+            rev.SparkBase.PersistMode.kPersistParameters,
         )
 
     def set_height(self, height: float):
@@ -81,10 +115,13 @@ class Elevator(commands2.Subsystem):
         self.controller.setReference(height, rev.SparkBase.ControlType.kPosition)  # rev.SparkBase.ControlType.kMAXMotionPositionControl
 
     def set_duty_cycle(self, output: float):
-        self.motor.set(output)
+        self.leader.set(output)
+
+    def carriage_height(self) -> float:
+        return self.encoder.getPosition()
 
     def lower_limit(self) -> bool:
         return self.limit_switch.get()
 
     def initSendable(self, builder: SendableBuilder) -> None:
-        builder.addDoubleProperty("Height", lambda: self.encoder.getPosition() + 0.1524, lambda _: None)
+        builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
