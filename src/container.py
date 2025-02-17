@@ -1,9 +1,9 @@
 from commands2 import Command, InstantCommand, RunCommand
 from wpilib import DriverStation, SmartDashboard
-from wpimath.geometry import Rotation2d
+from wpimath.geometry import Rotation2d, Pose2d
 
 from commands.superstructure import Superstructure
-from commands.swerve import ski_stop_command
+from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants
 from oi import XboxDriver, PS4Driver
 from subsystems.arm import Arm
@@ -56,7 +56,7 @@ class RobotContainer:
         # Driving buttons
         self.joystick.reset_gyro.onTrue(InstantCommand(self.swerve.zero_heading))
         self.joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
-        self.joystick.ski_stop.onTrue(ski_stop_command(self.swerve).until(self.joystick.is_movement_commanded))
+        self.joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.joystick.is_movement_commanded))
 
         """
         # Elevator buttons
@@ -71,6 +71,7 @@ class RobotContainer:
         """
 
         self.joystick.stick.square().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
+        self.joystick.stick.circle().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
 
     def register_named_commands(self):
         pass
