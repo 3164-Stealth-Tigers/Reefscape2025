@@ -31,8 +31,18 @@ class Arm(commands2.Subsystem):
         self.absolute_encoder_sim = rev.SparkAbsoluteEncoderSim(self.motor)
         gearbox = DCMotor.neoVortex(1)
         self.motor_sim = rev.SparkFlexSim(self.motor, gearbox)
-        plant = LinearSystemId.singleJointedArmSystem(gearbox, SingleJointedArmSim.estimateMOI(0.3048, 5), 200)
-        self.arm_sim = SingleJointedArmSim(plant, gearbox, 200, 0.3048, -1 * math.pi / 3, math.pi / 3, True, 0)
+        moment = SingleJointedArmSim.estimateMOI(ArmConstants.ARM_LENGTH, ArmConstants.ARM_MASS)
+        plant = LinearSystemId.singleJointedArmSystem(gearbox, moment, ArmConstants.GEAR_RATIO)
+        self.arm_sim = SingleJointedArmSim(
+            plant,
+            gearbox,
+            ArmConstants.ARM_MASS,
+            ArmConstants.ARM_MASS,
+            ArmConstants.MINIMUM_ANGLE,
+            ArmConstants.MAXIMUM_ANGLE,
+            True,
+            0,
+        )
 
         # Visual display of the arm
         mech = wpilib.Mechanism2d(5, 5)
@@ -69,12 +79,12 @@ class Arm(commands2.Subsystem):
             .velocityConversionFactor(360 / 60)
 
         motor_config.encoder \
-            .positionConversionFactor(360 / 200) \
-            .velocityConversionFactor(360 / 200 / 60)
+            .positionConversionFactor(360 / ArmConstants.GEAR_RATIO) \
+            .velocityConversionFactor(360 / ArmConstants.GEAR_RATIO / 60)
 
         motor_config.closedLoop \
             .setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder) \
-            .pid(0.2, 0, 0) \
+            .pid(0.4, 0, 0) \
             .outputRange(-1, 1) \
 
         self.motor.configure(

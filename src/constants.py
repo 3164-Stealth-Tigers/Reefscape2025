@@ -1,3 +1,5 @@
+import math
+
 from swervepy import u
 
 
@@ -36,3 +38,14 @@ class ClawConstants:
 class ArmConstants:
     MOTOR_ID = 12
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
+
+    # Physical measurements
+    ARM_LENGTH = (1 * u.ft).m_as(u.m)  # Distance from pivot point to end of arm
+    ARM_MASS = 5
+    GEAR_RATIO = 200
+
+    MINIMUM_ANGLE = -math.pi / 3
+    MAXIMUM_ANGLE = math.pi / 3
+
+class ClimberConstants:
+    MOTOR_ID = 13
