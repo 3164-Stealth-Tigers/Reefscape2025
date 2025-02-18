@@ -13,6 +13,12 @@ class Claw(commands2.Subsystem):
         # NEO 550 motor to spin intake wheels
         self.motor = rev.SparkMax(ClawConstants.MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
 
+        motor_config = rev.SparkBaseConfig()
+        motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)  # Prevent CORAL from getting stuck in the claw
+        self.motor.configure(
+            motor_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
+        )
+
         # Range sensor to detect coral possession
         self.distance_sensor = pwf.TimeOfFlight(ClawConstants.ToF_SENSOR_ID)
 
@@ -33,3 +39,9 @@ class Claw(commands2.Subsystem):
 
         # If the intake motors are stalled, the claw has possession of a game piece
         # return self.motor.getOutputCurrent() > (ClawConstants.CURRENT_LIMIT_AMPS - 2)
+
+    def IntakeCommand(self):
+        return commands2.StartEndCommand(self.intake, self.stop, self)
+
+    def OuttakeCommand(self):
+        return commands2.StartEndCommand(self.outtake, self.stop, self).onlyWhile(self.has_possession)

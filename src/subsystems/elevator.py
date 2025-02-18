@@ -3,6 +3,7 @@ import math
 import commands2
 import rev
 import wpilib
+import wpimath.controller
 from wpilib import RobotController
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -27,6 +28,8 @@ class Elevator(commands2.Subsystem):
 
         # Magnetic limit switch for lower limit and homing
         self.limit_switch = wpilib.DigitalInput(ElevatorConstants.LOWER_LIMIT_SWITCH_ID)
+
+        self.feedforward = wpimath.controller.ElevatorFeedforward(*ElevatorConstants.FEEDFORWARD_CONSTANTS)
 
         self.config()
 
@@ -111,8 +114,13 @@ class Elevator(commands2.Subsystem):
         )
 
     def set_height(self, height: float):
-        # Use MAXMotion for smoother position control
-        self.controller.setReference(height, rev.SparkBase.ControlType.kPosition)  # rev.SparkBase.ControlType.kMAXMotionPositionControl
+        ff = self.feedforward.calculate(self.encoder.getPosition(), self.encoder.getVelocity())
+        self.controller.setReference(
+            height,
+            rev.SparkBase.ControlType.kPosition,  # rev.SparkBase.ControlType.kMAXMotionPositionControl
+            arbFeedforward=ff,
+            arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
+        )
 
     def set_duty_cycle(self, output: float):
         self.leader.set(output)

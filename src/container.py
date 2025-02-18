@@ -1,4 +1,16 @@
+"""
+Commands Reference:
+
+AutoBuilder.followPath(path_name) --> Follow an individual path created in PathPlanner.
+AutoBuilder.buildAuto(auto_name) --> Follow a complete autonomous routine created in PathPlanner.
+self.superstructure.SetEndEffectorHeight(height, angle)
+DriveToPoseCommand(self.swerve, pose, parameters) --> Locks the robot to a position and rotation on the field.
+self.claw.IntakeCommand()
+self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends after the CORAL has been ejected.
+"""
+
 from commands2 import Command, InstantCommand, RunCommand
+from pathplannerlib.auto import AutoBuilder
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
