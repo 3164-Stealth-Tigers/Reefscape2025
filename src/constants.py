@@ -14,6 +14,8 @@ class ElevatorConstants:
     INVERT_LEFT_MOTOR = False
     INVERT_RIGHT_MOTOR = True
 
+    FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
+
     LOWER_LIMIT_SWITCH_ID = 0
 
     # Physical measurements
