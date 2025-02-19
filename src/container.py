@@ -19,6 +19,7 @@ from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants
 from oi import XboxDriver, PS4Driver
 from subsystems.arm import Arm
+from subsystems.claw import Claw
 from subsystems.climber import Climber
 from subsystems.elevator import Elevator
 from swerve_config import SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS
@@ -52,6 +53,8 @@ class RobotContainer:
         # Configure climber subsystem
         self.climber = Climber()
 
+        self.claw = Claw()
+
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.elevator, self.arm, self.climber)
 
@@ -62,7 +65,7 @@ class RobotContainer:
         self.configure_button_bindings()
 
     def get_autonomous_command(self) -> Command:
-        return Command()
+        return AutoBuilder.followPath("ALL SECTIONS")
 
     def configure_button_bindings(self):
         # Driving buttons

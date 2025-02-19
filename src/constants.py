@@ -7,6 +7,18 @@ class DrivingConstants:
     OPEN_LOOP = True
     FIELD_RELATIVE = True
 
+    # Create Reef Constants (arrays/lists of floats)
+    REEF_LEFT_UPPER: list[float] = [3.801, 5.507, -33.621]  # [X, Y, HEADING]
+    REEF_RIGHT_UPPER: list[float] = [5.446, 5.391, 125.770]  # [X, Y, HEADING]
+
+    REEF_LEFT_CENTER: list[float] = [2.848, 4.189, -108.628] # [X, Y, HEADING]
+    REEF_RIGHT_CENTER: list[float] = [6.129, 3.842, 9.926] # [X, Y, HEADING]
+
+    REEF_LEFT_LOWER: list[float] = [3.531, 2.697, 32.276] # [X, Y, HEADING]
+    REEF_RIGHT_LOWER: list[float] = [5.109, 2.486, 43.568] # [X, Y, HEADING]
+
+    # example usage(s): X,Y,HEADING = REEF_LEFT_CENTER
+    # Y = REEF_LEFT_CENTER[2]
 
 class ElevatorConstants:
     LEFT_MOTOR_ID = 9
@@ -34,7 +46,7 @@ class ClawConstants:
 
     # Sensor configs
     ToF_SENSOR_ID = 1
-    ToF_MIN_DISTANCE = 1  # millimeters
+    ToF_MIN_DISTANCE = 101.6  # millimeters to 4 inches
 
 
 class ArmConstants:
