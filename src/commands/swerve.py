@@ -27,6 +27,21 @@ def SkiStopCommand(swerve: SwerveDrive):
 
 class DriveToPoseCommand(commands2.Command):
     def __init__(self, swerve: SwerveDrive, target: Pose2d, parameters: TrajectoryFollowerParameters):
+        """
+        A Command that drive the robot to a given pose on the field. This Command may be run continuously to keep the
+        robot "locked" to target pose while scoring or intaking.
+
+        In the field coordinate system, the +X direction points toward the Red Alliance Driver Station, and the +Y
+        direction is rotated 90 degrees counterclockwise from the +X direction. Rotations are counterclockwise-positive.
+
+        A diagram may be found in the docs folder or
+        at this link: https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html.
+
+        :param swerve: The swerve drive subsystem.
+        :param target: The desired pose for the robot in the field coordinate system.
+        :param parameters: Parameters for tracking a pose autonomously.
+        """
+
         super().__init__()
         self.swerve = swerve
         self.target = PathPlannerTrajectoryState(pose=target)

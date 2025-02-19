@@ -41,7 +41,9 @@ class Claw(commands2.Subsystem):
         # return self.motor.getOutputCurrent() > (ClawConstants.CURRENT_LIMIT_AMPS - 2)
 
     def IntakeCommand(self):
+        """Pulls the CORAL into the claw. This command will not end on its own; it must be interrupted by the user."""
         return commands2.StartEndCommand(self.intake, self.stop, self)
 
     def OuttakeCommand(self):
+        """Ejects the CORAL from the claw. This command ends after the CORAL has been ejected."""
         return commands2.StartEndCommand(self.outtake, self.stop, self).onlyWhile(self.has_possession)
