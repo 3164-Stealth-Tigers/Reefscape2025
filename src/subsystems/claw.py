@@ -1,6 +1,7 @@
 import commands2
 import rev
 import playingwithfusion as pwf
+from commands2 import Command
 
 from constants import ClawConstants
 
@@ -22,6 +23,8 @@ class Claw(commands2.Subsystem):
         # Range sensor to detect coral possession
         self.distance_sensor = pwf.TimeOfFlight(ClawConstants.ToF_SENSOR_ID)
 
+        distance = self.distance_sensor.getRange()
+
     def intake(self):
         """Run the intake motors at a constant power, pulling CORAL into the claw."""
 
@@ -35,10 +38,20 @@ class Claw(commands2.Subsystem):
         """Return whether the claw is currently holding CORAL."""
         # If the distance reported by the sensor is less than a certain known distance,
         # a CORAL is sitting above the sensor; therefore, the claw has possession
-        return self.distance_sensor.getRange() < ClawConstants.ToF_MIN_DISTANCE
+
+        return self.distance_sensor.getRange() <= ClawConstants.ToF_MIN_DISTANCE
+
 
         # If the intake motors are stalled, the claw has possession of a game piece
-        # return self.motor.getOutputCurrent() > (ClawConstants.CURRENT_LIMIT_AMPS - 2)
+         #return self.motor.getOutputCurrent() > (ClawConstants.CURRENT_LIMIT_AMPS - 2)
+
+    def Intake(self):
+
+        return Command()
+
+    def Outtake(self):
+        return Command()
+
 
     def IntakeCommand(self):
         """Pulls the CORAL into the claw. This command will not end on its own; it must be interrupted by the user."""
