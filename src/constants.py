@@ -28,6 +28,7 @@ class ElevatorConstants:
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
 
+    # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0
 
     # Physical measurements
