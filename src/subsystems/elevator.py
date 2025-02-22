@@ -129,7 +129,7 @@ class Elevator(commands2.Subsystem):
         return self.encoder.getPosition()
 
     def lower_limit(self) -> bool:
-        return self.limit_switch.get()
+        return not(self.limit_switch.get())
 
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
