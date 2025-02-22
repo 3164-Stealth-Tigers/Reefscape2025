@@ -1,13 +1,14 @@
-import math
-
 import commands2
 import rev
 import wpilib
 import wpimath.controller
+from wpilib.sysid import SysIdRoutineLog
+from commands2.sysid import SysIdRoutine
 from wpilib import RobotController
 from wpilib.simulation import SingleJointedArmSim, RoboRioSim
 from wpimath.geometry import Rotation2d
 from wpimath.system.plant import DCMotor, LinearSystemId
+from wpiutil import SendableBuilder
 
 from constants import ArmConstants
 from sim_helper import SimHelper
@@ -48,6 +49,16 @@ class Arm(commands2.Subsystem):
         mech = wpilib.Mechanism2d(5, 5)
         root = mech.getRoot("armPivot", 1, 2.5)
         self.arm = root.appendLigament("arm", 3, self.arm_sim.getAngleDegrees())
+
+        # Create a new SysId routine for characterizing the arm
+        self.sysId_routine = SysIdRoutine(
+            SysIdRoutine.Config(),
+            SysIdRoutine.Mechanism(
+                self.set_voltage,
+                self.sysId_log,
+                self,
+            ),
+        )
 
         wpilib.SmartDashboard.putData("Arm Mechanism", mech)
 
@@ -108,6 +119,33 @@ class Arm(commands2.Subsystem):
             arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
         )
 
+    def set_duty_cycle(self, output: float):
+        self.motor.set(output)
+
+    def set_voltage(self, volts: float):
+        self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
+
     def angle(self) -> Rotation2d:
         degrees = self.absolute_encoder.getPosition()
         return Rotation2d.fromDegrees(degrees)
+
+    def sysId_log(self, log: SysIdRoutineLog):
+        log.motor("arm-pivot") \
+            .voltage(self.motor.getAppliedOutput() * self.motor.getBusVoltage()) \
+            .angularPosition(self.absolute_encoder.getPosition()) \
+            .angularVelocity(self.absolute_encoder.getVelocity())
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        builder.addStringProperty("Command", self.current_command_name, lambda _: None)
+
+    def current_command_name(self) -> str:
+        try:
+            return self.getCurrentCommand().getName()
+        except AttributeError:
+            return ""
+
+    def SysIdQuasistatic(self, direction: SysIdRoutine.Direction):
+        return self.sysId_routine.quasistatic(direction)
+
+    def SysIdDynamic(self, direction: SysIdRoutine.Direction):
+        return self.sysId_routine.dynamic(direction)

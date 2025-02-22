@@ -1,19 +1,22 @@
 """
 Commands Reference:
 
-AutoBuilder.followPath(path_name) --> Follow an individual path created in PathPlanner.
+AutoBuilder.followPath(path) --> Follow an individual path created in PathPlanner.
 AutoBuilder.buildAuto(auto_name) --> Follow a complete autonomous routine created in PathPlanner.
 self.superstructure.SetEndEffectorHeight(height, angle)
 DriveToPoseCommand(self.swerve, pose, parameters) --> Locks the robot to a position and rotation on the field.
 self.claw.IntakeCommand()
 self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends after the CORAL has been ejected.
 """
-
+import commands2
 from commands2 import Command, InstantCommand, RunCommand
+from commands2.button import CommandXboxController
+from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
+import oi
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants
@@ -30,14 +33,16 @@ class RobotContainer:
     def __init__(self):
         DriverStation.silenceJoystickConnectionWarning(True)
 
-        self.joystick = XboxDriver(0)
+        self.driver_joystick = XboxDriver(0)
+        self.operator_joystick = CommandXboxController(1)
+        self.sysid_joystick = CommandXboxController(2)
 
         # Configure drivetrain
         self.swerve = SwerveDrive(SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS)
         self.teleop_drive_command = self.swerve.teleop_command(
-            self.joystick.forward,
-            self.joystick.strafe,
-            self.joystick.turn,
+            self.driver_joystick.forward,
+            self.driver_joystick.strafe,
+            self.driver_joystick.turn,
             DrivingConstants.FIELD_RELATIVE,
             DrivingConstants.OPEN_LOOP,
         )
@@ -45,10 +50,23 @@ class RobotContainer:
 
         # Configure elevator subsystem
         self.elevator = Elevator()
+        self.elevator.setDefaultCommand(
+            commands2.RunCommand(
+                lambda: self.elevator.set_duty_cycle(oi.deadband(-self.operator_joystick.getLeftY(), 0.05)),
+                self.elevator,
+            )
+        )
         SmartDashboard.putData("Elevator", self.elevator)
 
         # Configure arm subsystem
         self.arm = Arm()
+        self.arm.setDefaultCommand(
+            commands2.RunCommand(
+                lambda: self.arm.set_duty_cycle(oi.deadband(-self.operator_joystick.getRightY(), 0.05)),
+                self.arm,
+            )
+        )
+        SmartDashboard.putData("Arm", self.arm)
 
         # Configure climber subsystem
         self.climber = Climber()
@@ -69,14 +87,14 @@ class RobotContainer:
 
     def configure_button_bindings(self):
         # Driving buttons
-        self.joystick.reset_gyro.onTrue(InstantCommand(self.swerve.zero_heading))
-        self.joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
-        self.joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.joystick.is_movement_commanded))
+        self.driver_joystick.reset_gyro.onTrue(InstantCommand(self.swerve.zero_heading))
+        self.driver_joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
+        self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
 
         # Elevator buttons
-        self.joystick.stick.povDown().onTrue(InstantCommand(lambda: self.elevator.set_height(1), self.elevator))
-        self.joystick.stick.povLeft().onTrue(InstantCommand(lambda: self.elevator.set_height(2), self.elevator))
-        self.joystick.stick.povUp().onTrue(InstantCommand(lambda: self.elevator.set_height(3), self.elevator))
+        self.driver_joystick.stick.povDown().onTrue(InstantCommand(lambda: self.elevator.set_height(1), self.elevator))
+        self.driver_joystick.stick.povLeft().onTrue(InstantCommand(lambda: self.elevator.set_height(2), self.elevator))
+        self.driver_joystick.stick.povUp().onTrue(InstantCommand(lambda: self.elevator.set_height(3), self.elevator))
 
         """
         # Arm buttons
@@ -85,8 +103,19 @@ class RobotContainer:
         self.joystick.stick.cross().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(-45)), self.arm))
         """
 
-        self.joystick.stick.a().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
-        self.joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
+        self.driver_joystick.stick.a().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
+        self.driver_joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
+
+        # SysId routines
+        self.sysid_joystick.y().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
+        self.sysid_joystick.a().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+        self.sysid_joystick.b().whileTrue(self.elevator.SysIdDynamic(SysIdRoutine.Direction.kForward))
+        self.sysid_joystick.x().whileTrue(self.elevator.SysIdDynamic(SysIdRoutine.Direction.kReverse))
+
+        self.sysid_joystick.povUp().whileTrue(self.arm.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
+        self.sysid_joystick.povDown().whileTrue(self.arm.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+        self.sysid_joystick.povRight().whileTrue(self.arm.SysIdDynamic(SysIdRoutine.Direction.kForward))
+        self.sysid_joystick.povLeft().whileTrue(self.arm.SysIdDynamic(SysIdRoutine.Direction.kReverse))
 
     def register_named_commands(self):
         pass

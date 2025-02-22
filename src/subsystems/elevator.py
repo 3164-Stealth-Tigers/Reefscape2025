@@ -4,6 +4,8 @@ import commands2
 import rev
 import wpilib
 import wpimath.controller
+from wpilib.sysid import SysIdRoutineLog
+from commands2.sysid import SysIdRoutine
 from wpilib import RobotController
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -58,6 +60,16 @@ class Elevator(commands2.Subsystem):
             "carriage", self.elevator_sim.getPosition(), 90
         )
 
+        # Create a new SysId routine for characterizing the arm
+        self.sysId_routine = SysIdRoutine(
+            SysIdRoutine.Config(),
+            SysIdRoutine.Mechanism(
+                self.set_voltage,
+                self.sysId_log,
+                self,
+            ),
+        )
+
         wpilib.SmartDashboard.putData("Elevator Mechanism", mech)
 
     def periodic(self) -> None:
@@ -79,23 +91,30 @@ class Elevator(commands2.Subsystem):
     def config(self):
         global_config = rev.SparkBaseConfig()
 
+        global_config \
+            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+
         global_config.encoder \
             .positionConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO) \
             .velocityConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO / 60)
-
-        global_config.closedLoop \
-            .pid(10, 0, 0) \
-            .outputRange(-1, 1)
-
-        global_config.closedLoop.maxMotion \
-            .maxVelocity(1) \
-            .maxAcceleration(10) \
-            .allowedClosedLoopError(0.01)  # Affected by position conversion factor
 
         leader_config = rev.SparkBaseConfig()
         leader_config \
             .apply(global_config) \
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
+
+        leader_config.closedLoop \
+            .pid(10, 0, 0) \
+            .outputRange(-1, 1)
+
+        leader_config.closedLoop.maxMotion \
+            .maxVelocity(1) \
+            .maxAcceleration(10) \
+            .allowedClosedLoopError(0.01)  # Affected by position conversion factor
+
+        leader_config.softLimit \
+            .forwardSoftLimit(ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT) \
+            .reverseSoftLimit(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
 
         follower_config = rev.SparkBaseConfig()
         follower_config \
@@ -125,11 +144,33 @@ class Elevator(commands2.Subsystem):
     def set_duty_cycle(self, output: float):
         self.leader.set(output)
 
+    def set_voltage(self, volts: float):
+        self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
+
     def carriage_height(self) -> float:
         return self.encoder.getPosition()
 
     def lower_limit(self) -> bool:
         return self.limit_switch.get()
 
+    def sysId_log(self, log: SysIdRoutineLog):
+        log.motor("elevator") \
+            .voltage(self.leader.getAppliedOutput() * self.leader.getBusVoltage()) \
+            .position(self.encoder.getPosition()) \
+            .velocity(self.encoder.getVelocity())
+
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
+        builder.addStringProperty("Command", self.current_command_name, lambda _: None)
+
+    def current_command_name(self) -> str:
+        try:
+            return self.getCurrentCommand().getName()
+        except AttributeError:
+            return ""
+
+    def SysIdQuasistatic(self, direction: SysIdRoutine.Direction):
+        return self.sysId_routine.quasistatic(direction)
+
+    def SysIdDynamic(self, direction: SysIdRoutine.Direction):
+        return self.sysId_routine.dynamic(direction)
