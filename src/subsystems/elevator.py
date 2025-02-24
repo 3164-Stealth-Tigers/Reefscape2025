@@ -7,7 +7,7 @@ import wpimath.controller
 from wpilib.sysid import SysIdRoutineLog
 from commands2.sysid import SysIdRoutine
 from wpilib import RobotController
-from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim
+from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
@@ -30,6 +30,7 @@ class Elevator(commands2.Subsystem):
 
         # Magnetic limit switch for lower limit and homing
         self.limit_switch = wpilib.DigitalInput(ElevatorConstants.LOWER_LIMIT_SWITCH_ID)
+        self.limit_switch_sim = DIOSim(self.limit_switch)
 
         self.feedforward = wpimath.controller.ElevatorFeedforward(*ElevatorConstants.FEEDFORWARD_CONSTANTS)
 
@@ -114,7 +115,9 @@ class Elevator(commands2.Subsystem):
 
         leader_config.softLimit \
             .forwardSoftLimit(ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT) \
-            .reverseSoftLimit(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
+            .reverseSoftLimit(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT) \
+            .forwardSoftLimitEnabled(True) \
+            .reverseSoftLimitEnabled(True)
 
         follower_config = rev.SparkBaseConfig()
         follower_config \
@@ -132,8 +135,11 @@ class Elevator(commands2.Subsystem):
             rev.SparkBase.PersistMode.kPersistParameters,
         )
 
+    def reset(self):
+        self.encoder.setPosition(ElevatorConstants.LIMIT_SWITCH_HEIGHT)
+
     def set_height(self, height: float):
-        ff = self.feedforward.calculate(self.encoder.getPosition(), self.encoder.getVelocity())
+        ff = self.feedforward.calculate(self.encoder.getVelocity())
         self.controller.setReference(
             height,
             rev.SparkBase.ControlType.kPosition,  # rev.SparkBase.ControlType.kMAXMotionPositionControl
@@ -147,11 +153,22 @@ class Elevator(commands2.Subsystem):
     def set_voltage(self, volts: float):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
 
+    def enable_soft_limits(self, enable: bool):
+        motor_config = rev.SparkBaseConfig()
+        motor_config.softLimit.forwardSoftLimitEnabled(enable)
+        motor_config.softLimit.reverseSoftLimitEnabled(enable)
+        # Configure the motor without resetting parameters to defaults. We only want to change the soft limit enable.
+        self.leader.configure(
+            motor_config, rev.SparkBase.ResetMode.kNoResetSafeParameters, rev.SparkBase.PersistMode.kNoPersistParameters
+        )
+
     def carriage_height(self) -> float:
         return self.encoder.getPosition()
 
     def lower_limit(self) -> bool:
-        return self.limit_switch.get()
+        """Return True if the lower limit switch is triggered."""
+        # Hall Effect sensor returns False when magnet is detected.
+        return not self.limit_switch.get()
 
     def sysId_log(self, log: SysIdRoutineLog):
         log.motor("elevator") \
@@ -161,6 +178,7 @@ class Elevator(commands2.Subsystem):
 
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
+        builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
 
     def current_command_name(self) -> str:
@@ -174,3 +192,23 @@ class Elevator(commands2.Subsystem):
 
     def SysIdDynamic(self, direction: SysIdRoutine.Direction):
         return self.sysId_routine.dynamic(direction)
+
+    def HomeElevator(self):
+        command = commands2.SequentialCommandGroup(
+            # Disable soft limits
+            commands2.InstantCommand(lambda: self.enable_soft_limits(False)),
+            # If the limit switch is already triggered, move the carriage up, away from the switch
+            commands2.RunCommand(lambda: self.set_voltage(1.5)).onlyWhile(self.lower_limit),
+            commands2.WaitCommand(0.2),
+            # Move the carriage down until it triggers the limit switch
+            commands2.RunCommand(lambda: self.set_voltage(-1.5)).until(self.lower_limit),
+            # Reset the zero position
+            commands2.InstantCommand(self.reset),
+            # Stop moving the motors
+            commands2.InstantCommand(lambda: self.set_voltage(0)),
+            # Re-enable soft limits
+            commands2.InstantCommand(lambda: self.enable_soft_limits(True)),
+        )
+        command.setName("Home Elevator")
+        command.addRequirements(self)
+        return command

@@ -13,6 +13,7 @@ from commands2 import Command, InstantCommand, RunCommand
 from commands2.button import CommandXboxController
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.path import PathPlannerPath
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
@@ -50,22 +51,22 @@ class RobotContainer:
 
         # Configure elevator subsystem
         self.elevator = Elevator()
-        self.elevator.setDefaultCommand(
-            commands2.RunCommand(
-                lambda: self.elevator.set_duty_cycle(oi.deadband(-self.operator_joystick.getLeftY(), 0.05)),
-                self.elevator,
-            )
-        )
+        #self.elevator.setDefaultCommand(
+        #    commands2.RunCommand(
+        #        lambda: self.elevator.set_duty_cycle(oi.deadband(-self.operator_joystick.getLeftY(), 0.05)),
+        #        self.elevator,
+        #    )
+        #)
         SmartDashboard.putData("Elevator", self.elevator)
 
         # Configure arm subsystem
         self.arm = Arm()
-        self.arm.setDefaultCommand(
-            commands2.RunCommand(
-                lambda: self.arm.set_duty_cycle(oi.deadband(-self.operator_joystick.getRightY(), 0.05)),
-                self.arm,
-            )
-        )
+        #self.arm.setDefaultCommand(
+        #    commands2.RunCommand(
+        #        lambda: self.arm.set_duty_cycle(oi.deadband(-self.operator_joystick.getRightY(), 0.05)),
+        #        self.arm,
+        #    )
+        #)
         SmartDashboard.putData("Arm", self.arm)
 
         # Configure climber subsystem
@@ -83,7 +84,20 @@ class RobotContainer:
         self.configure_button_bindings()
 
     def get_autonomous_command(self) -> Command:
-        return AutoBuilder.followPath("ALL SECTIONS")
+        return self.elevator.HomeElevator()
+
+        """
+        first_path = PathPlannerPath.fromPathFile("Start to R (mixed)")
+        return commands2.SequentialCommandGroup(
+            AutoBuilder.resetOdom(first_path.getStartingHolonomicPose()),
+            commands2.ParallelRaceGroup(
+                self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)),
+                AutoBuilder.followPath(first_path),
+            ),
+            AutoBuilder.followPath(PathPlannerPath.fromPathFile("R to Loader 1 (mixed)")),
+            AutoBuilder.followPath(PathPlannerPath.fromPathFile("Loader 1 to TR (mixed)")),
+        )
+        """
 
     def configure_button_bindings(self):
         # Driving buttons
@@ -92,9 +106,9 @@ class RobotContainer:
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
 
         # Elevator buttons
-        self.driver_joystick.stick.povDown().onTrue(InstantCommand(lambda: self.elevator.set_height(1), self.elevator))
-        self.driver_joystick.stick.povLeft().onTrue(InstantCommand(lambda: self.elevator.set_height(2), self.elevator))
-        self.driver_joystick.stick.povUp().onTrue(InstantCommand(lambda: self.elevator.set_height(3), self.elevator))
+        self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(1), self.elevator))
+        self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(2), self.elevator))
+        self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(3), self.elevator))
 
         """
         # Arm buttons

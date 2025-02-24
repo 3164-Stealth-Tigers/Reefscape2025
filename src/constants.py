@@ -37,6 +37,7 @@ class ElevatorConstants:
 
     MINIMUM_CARRIAGE_HEIGHT = 0
     MAXIMUM_CARRIAGE_HEIGHT = 3
+    LIMIT_SWITCH_HEIGHT = 0
 
 
 class ClawConstants:
