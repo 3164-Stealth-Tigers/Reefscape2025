@@ -27,12 +27,12 @@ class Robot(commands2.TimedCommandRobot):
             self.autonomous_command.cancel()
 
     def robotPeriodic(self):
-        if self.elevator.limit_switch:
-            if self.elevator.lower_limit():
-                print("Magnet detected")
-            else:
-                print("Magnet not detected")
-        else:
-            pass
+        # if self.elevator.limit_switch:
+        #     if self.elevator.lower_limit():
+        #         print("Magnet detected")
+        #     else:
+        #         print("Magnet not detected")
+        # else:
+        pass
 
 

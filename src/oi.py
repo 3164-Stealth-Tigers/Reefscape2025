@@ -10,7 +10,7 @@ Any special logic (e.g. inverting the Y axis on a joystick) is also defined in a
 """
 
 from typing import Protocol
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 from commands2.button import CommandXboxController, CommandJoystick, Trigger, CommandPS4Controller
 
@@ -57,7 +57,71 @@ class DriverActionSet(Protocol):
         raise NotImplementedError
 
 
+# TODO: Map controller buttons & functions
+class OperatorActionSet(Protocol):
+    # Elevator button functions
+    @abstractmethod
+    def level0(self):
+        # Approach Loading Level
+        # ???
+        raise NotImplementedError
+
+    @abstractmethod
+    def level1(self):
+        # Approach level 1
+        # A?
+        raise NotImplementedError
+
+    @abstractmethod
+    def level2(self):
+        # Approach level 2
+        # X?
+        raise NotImplementedError
+
+    @abstractmethod
+    def level3(self):
+        # Approach level 3
+        # B?
+        raise NotImplementedError
+
+    @abstractmethod
+    def level4(self):
+        # Approach level 4
+        # Y?
+        raise NotImplementedError
+
 # Control schemes
+
+class XboxOperator(OperatorActionSet):
+    def __init__(self, port: int):
+        self.stick = CommandXboxController(port)
+
+    # Elevator button functions
+
+    def level0(self):
+        # Approach Loading Level
+        # ???
+        return self.stick.rightTrigger().getAsBoolean()
+
+    def level1(self):
+        # Approach level 1
+        # A?
+        return self.stick.a().getAsBoolean()
+
+    def level2(self):
+        # Approach level 2
+        # X?
+        return self.stick.x().getAsBoolean()
+
+    def level3(self):
+        # Approach level 3
+        # B?
+        return self.stick.b().getAsBoolean()
+
+    def level4(self):
+        # Approach level 4
+        # Y?
+        return self.stick.y().getAsBoolean()
 
 
 class XboxDriver(DriverActionSet):
@@ -100,7 +164,7 @@ class XboxDriver(DriverActionSet):
         return self.forward() + self.strafe() + self.turn() != 0
 
 
-class PS4Driver(DriverActionSet):
+class XBoxDriver(DriverActionSet):
     """Drive the robot with an PS4 controller"""
 
     def __init__(self, port: int):

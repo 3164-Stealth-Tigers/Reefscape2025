@@ -18,10 +18,11 @@ from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
 import oi
+import constants
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants
-from oi import XboxDriver, PS4Driver
+from oi import XboxDriver, XboxOperator  # , PS4Driver
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
@@ -116,6 +117,12 @@ class RobotContainer:
         self.joystick.stick.circle().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
         self.joystick.stick.cross().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(-45)), self.arm))
         """
+        # Configure Elevator Operator buttons
+
+        # LOADER HEIGHT (LEVEL 0)
+        # RIGHT TRIGGER
+        self.workstick.stick.rightTrigger().onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_0_HEIGHT, 0))
 
         self.driver_joystick.stick.a().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
         self.driver_joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
@@ -130,6 +137,28 @@ class RobotContainer:
         self.sysid_joystick.povDown().whileTrue(self.arm.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
         self.sysid_joystick.povRight().whileTrue(self.arm.SysIdDynamic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.povLeft().whileTrue(self.arm.SysIdDynamic(SysIdRoutine.Direction.kReverse))
+        # LEVEL 1 HEIGHT
+        # A BUTTON
+        self.workstick.stick.a().onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_1_HEIGHT, 0))
+
+        # LEVEL 2 HEIGHT
+        # X BUTTON
+        self.workstick.stick.x().onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_2_HEIGHT, 0))
+
+        # LEVEL 3 HEIGHT
+        # B BUTTON
+        self.workstick.stick.b().onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_3_HEIGHT, 0))
+
+        # LEVEL 4 HEIGHT
+        # Y BUTTON
+        self.workstick.stick.y().onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_4_HEIGHT, 0))
+
+        # self.joystick.stick.a().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
+        self.joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
 
     def register_named_commands(self):
         pass

@@ -40,6 +40,12 @@ class ElevatorConstants:
     MAXIMUM_CARRIAGE_HEIGHT = 3
     LIMIT_SWITCH_HEIGHT = 0
 
+    LEVEL_0_HEIGHT = 0
+    LEVEL_1_HEIGHT = 1
+    LEVEL_2_HEIGHT = 2
+    LEVEL_3_HEIGHT = 3
+    LEVEL_4_HEIGHT = 4
+
 
 class ClawConstants:
     # Motor configs
