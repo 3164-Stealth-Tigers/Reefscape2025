@@ -1,4 +1,5 @@
 import math
+from wpimath.geometry import Rotation2d
 
 from swervepy import u
 
@@ -40,11 +41,11 @@ class ElevatorConstants:
     MAXIMUM_CARRIAGE_HEIGHT = 3
     LIMIT_SWITCH_HEIGHT = 0
 
-    LEVEL_0_HEIGHT = 0
+    LEVEL_0_HEIGHT = 0.5
     LEVEL_1_HEIGHT = 1
-    LEVEL_2_HEIGHT = 2
-    LEVEL_3_HEIGHT = 3
-    LEVEL_4_HEIGHT = 4
+    LEVEL_2_HEIGHT = 1.5
+    LEVEL_3_HEIGHT = 2
+    LEVEL_4_HEIGHT = 2.5
 
 
 class ClawConstants:
@@ -66,8 +67,15 @@ class ArmConstants:
     ARM_MASS = 5
     GEAR_RATIO = 200
 
-    MINIMUM_ANGLE = -math.pi / 3
+    MINIMUM_ANGLE = -math.pi /2
     MAXIMUM_ANGLE = math.pi / 3
+
+    LEVEL_0_ROTATION = Rotation2d.fromDegrees(0)
+    LEVEL_1_ROTATION = Rotation2d.fromDegrees(35)
+    LEVEL_2_ROTATION = Rotation2d.fromDegrees(35)
+    LEVEL_3_ROTATION = Rotation2d.fromDegrees(35)
+    LEVEL_4_ROTATION = Rotation2d.fromDegrees(0)
+
 
 class ClimberConstants:
     MOTOR_ID = 13

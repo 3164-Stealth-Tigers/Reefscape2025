@@ -8,7 +8,7 @@ DriveToPoseCommand(self.swerve, pose, parameters) --> Locks the robot to a posit
 self.claw.IntakeCommand()
 self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends after the CORAL has been ejected.
 """
-import commands2
+
 from commands2 import Command, InstantCommand, RunCommand
 from commands2.button import CommandXboxController
 from commands2.sysid import SysIdRoutine
@@ -17,12 +17,11 @@ from pathplannerlib.path import PathPlannerPath
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
-import oi
 import constants
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants
-from oi import XboxDriver, XboxOperator  # , PS4Driver
+from oi import XboxDriver, XboxOperator
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
@@ -36,7 +35,7 @@ class RobotContainer:
         DriverStation.silenceJoystickConnectionWarning(True)
 
         self.driver_joystick = XboxDriver(0)
-        self.operator_joystick = CommandXboxController(1)
+        self.operator_joystick = XboxOperator(1)
         self.sysid_joystick = CommandXboxController(2)
 
         # Configure drivetrain
@@ -107,9 +106,9 @@ class RobotContainer:
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
 
         # Elevator buttons
-        self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(1), self.elevator))
-        self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(2), self.elevator))
-        self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(3), self.elevator))
+        # self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(1), self.elevator))
+        # self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(2), self.elevator))
+        # self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(3), self.elevator))
 
         """
         # Arm buttons
@@ -117,15 +116,38 @@ class RobotContainer:
         self.joystick.stick.circle().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
         self.joystick.stick.cross().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(-45)), self.arm))
         """
+
         # Configure Elevator Operator buttons
 
         # LOADER HEIGHT (LEVEL 0)
         # RIGHT TRIGGER
-        self.workstick.stick.rightTrigger().onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_0_HEIGHT, 0))
+        self.operator_joystick.loading_level.onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_0_HEIGHT, Rotation2d.fromDegrees(0))
+        )
 
-        self.driver_joystick.stick.a().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
-        self.driver_joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
+        # LEVEL 1 HEIGHT
+        # A BUTTON
+        self.operator_joystick.level_1.onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_1_HEIGHT, Rotation2d.fromDegrees(0))
+        )
+
+        # LEVEL 2 HEIGHT
+        # X BUTTON
+        self.operator_joystick.level_2.onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_2_HEIGHT, Rotation2d.fromDegrees(0))
+        )
+
+        # LEVEL 3 HEIGHT
+        # B BUTTON
+        self.operator_joystick.level_3.onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_3_HEIGHT, Rotation2d.fromDegrees(0))
+        )
+
+        # LEVEL 4 HEIGHT
+        # Y BUTTON
+        self.operator_joystick.level_4.onTrue(
+            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(0))
+        )
 
         # SysId routines
         self.sysid_joystick.y().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
@@ -137,28 +159,9 @@ class RobotContainer:
         self.sysid_joystick.povDown().whileTrue(self.arm.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
         self.sysid_joystick.povRight().whileTrue(self.arm.SysIdDynamic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.povLeft().whileTrue(self.arm.SysIdDynamic(SysIdRoutine.Direction.kReverse))
-        # LEVEL 1 HEIGHT
-        # A BUTTON
-        self.workstick.stick.a().onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_1_HEIGHT, 0))
-
-        # LEVEL 2 HEIGHT
-        # X BUTTON
-        self.workstick.stick.x().onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_2_HEIGHT, 0))
-
-        # LEVEL 3 HEIGHT
-        # B BUTTON
-        self.workstick.stick.b().onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_3_HEIGHT, 0))
-
-        # LEVEL 4 HEIGHT
-        # Y BUTTON
-        self.workstick.stick.y().onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_4_HEIGHT, 0))
 
         # self.joystick.stick.a().onTrue(self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)))
-        self.joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
+        # self.driver_joystick.stick.b().whileTrue(DriveToPoseCommand(self.swerve, Pose2d(7, 6, Rotation2d.fromDegrees(30)), AUTONOMOUS_PARAMS))
 
     def register_named_commands(self):
         pass

@@ -60,30 +60,35 @@ class DriverActionSet(Protocol):
 # TODO: Map controller buttons & functions
 class OperatorActionSet(Protocol):
     # Elevator button functions
+    @property
     @abstractmethod
     def loading_level(self) -> Trigger:
         # Approach Loading Level
         # ???
         raise NotImplementedError
 
+    @property
     @abstractmethod
     def level_1(self) -> Trigger:
         # Approach level 1
         # A?
         raise NotImplementedError
 
+    @property
     @abstractmethod
     def level_2(self) -> Trigger:
         # Approach level 2
         # X?
         raise NotImplementedError
 
+    @property
     @abstractmethod
     def level_3(self) -> Trigger:
         # Approach level 3
         # B?
         raise NotImplementedError
 
+    @property
     @abstractmethod
     def level_4(self) -> Trigger:
         # Approach level 4
@@ -99,24 +104,29 @@ class XboxOperator(OperatorActionSet):
 
     # Elevator button functions
 
+    @property
     def loading_level(self) -> Trigger:
-        return self.stick.leftTrigger()
+        return self.stick.rightTrigger()
 
+    @property
     def level_1(self) -> Trigger:
         # Approach level 1
         # A?
         return self.stick.a()
 
+    @property
     def level_2(self) -> Trigger:
         # Approach level 2
         # X?
         return self.stick.x()
 
+    @property
     def level_3(self) -> Trigger:
         # Approach level 3
         # B?
         return self.stick.b()
 
+    @property
     def level_4(self) -> Trigger:
         # Approach level 4
         # Y?
