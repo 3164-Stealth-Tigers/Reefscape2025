@@ -61,36 +61,37 @@ class DriverActionSet(Protocol):
 class OperatorActionSet(Protocol):
     # Elevator button functions
     @abstractmethod
-    def level0(self):
+    def loading_level(self) -> Trigger:
         # Approach Loading Level
         # ???
         raise NotImplementedError
 
     @abstractmethod
-    def level1(self):
+    def level_1(self) -> Trigger:
         # Approach level 1
         # A?
         raise NotImplementedError
 
     @abstractmethod
-    def level2(self):
+    def level_2(self) -> Trigger:
         # Approach level 2
         # X?
         raise NotImplementedError
 
     @abstractmethod
-    def level3(self):
+    def level_3(self) -> Trigger:
         # Approach level 3
         # B?
         raise NotImplementedError
 
     @abstractmethod
-    def level4(self):
+    def level_4(self) -> Trigger:
         # Approach level 4
         # Y?
         raise NotImplementedError
 
 # Control schemes
+
 
 class XboxOperator(OperatorActionSet):
     def __init__(self, port: int):
@@ -98,30 +99,28 @@ class XboxOperator(OperatorActionSet):
 
     # Elevator button functions
 
-    def level0(self):
-        # Approach Loading Level
-        # ???
-        return self.stick.rightTrigger().getAsBoolean()
+    def loading_level(self) -> Trigger:
+        return self.stick.leftTrigger()
 
-    def level1(self):
+    def level_1(self) -> Trigger:
         # Approach level 1
         # A?
-        return self.stick.a().getAsBoolean()
+        return self.stick.a()
 
-    def level2(self):
+    def level_2(self) -> Trigger:
         # Approach level 2
         # X?
-        return self.stick.x().getAsBoolean()
+        return self.stick.x()
 
-    def level3(self):
+    def level_3(self) -> Trigger:
         # Approach level 3
         # B?
-        return self.stick.b().getAsBoolean()
+        return self.stick.b()
 
-    def level4(self):
+    def level_4(self) -> Trigger:
         # Approach level 4
         # Y?
-        return self.stick.y().getAsBoolean()
+        return self.stick.y()
 
 
 class XboxDriver(DriverActionSet):
