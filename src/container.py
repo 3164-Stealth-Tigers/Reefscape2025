@@ -18,9 +18,10 @@ from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
 import constants
+
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
-from constants import DrivingConstants
+from constants import DrivingConstants, ArmConstants, ElevatorConstants, ClimberConstants, ClawConstants
 from oi import XboxDriver, XboxOperator
 from subsystems.arm import Arm
 from subsystems.claw import Claw
@@ -119,34 +120,36 @@ class RobotContainer:
 
         # Configure Elevator Operator buttons
 
+        self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, ArmConstants.LEVEL_0_ROTATION)
+
         # LOADER HEIGHT (LEVEL 0)
         # RIGHT TRIGGER
         self.operator_joystick.loading_level.onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_0_HEIGHT, Rotation2d.fromDegrees(0))
+            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, ArmConstants.LEVEL_0_ROTATION)
         )
 
         # LEVEL 1 HEIGHT
         # A BUTTON
         self.operator_joystick.level_1.onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_1_HEIGHT, Rotation2d.fromDegrees(0))
+            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_1_HEIGHT, ArmConstants.LEVEL_1_ROTATION)
         )
 
         # LEVEL 2 HEIGHT
         # X BUTTON
         self.operator_joystick.level_2.onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_2_HEIGHT, Rotation2d.fromDegrees(0))
+            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_2_HEIGHT, ArmConstants.LEVEL_2_ROTATION)
         )
 
         # LEVEL 3 HEIGHT
         # B BUTTON
         self.operator_joystick.level_3.onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_3_HEIGHT, Rotation2d.fromDegrees(0))
+            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_3_HEIGHT, ArmConstants.LEVEL_3_ROTATION)
         )
 
         # LEVEL 4 HEIGHT
         # Y BUTTON
         self.operator_joystick.level_4.onTrue(
-            self.superstructure.SetEndEffectorHeight(constants.ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(0))
+            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION)
         )
 
         # SysId routines

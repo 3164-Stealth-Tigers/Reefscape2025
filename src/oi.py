@@ -95,6 +95,84 @@ class OperatorActionSet(Protocol):
         # Y?
         raise NotImplementedError
 
+
+class ScoringPositionsActionSet(Protocol):
+    # All of these positions are based on the view from robot sim (different sides of the hexagon)
+
+    @property
+    @abstractmethod
+    def reef_BL_L(self) -> Trigger:
+        """Goes to the left, bottom left reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_BL_R(self) -> Trigger:
+        """Goes to the right, bottom left reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_BR_L(self) -> Trigger:
+        """Goes to the left, bottom right reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_BR_R(self) -> Trigger:
+        """Goes to the right, bottom right reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_R_L(self) -> Trigger:
+        """Goes to the left, right reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_R_R(self) -> Trigger:
+        """Goes to the right, right reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_TR_L(self) -> Trigger:
+        """Goes to the left, top right reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_TR_R(self) -> Trigger:
+        """Goes to the right, top right reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_TL_L(self) -> Trigger:
+        """Goes to the left, top left reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_TL_R(self) -> Trigger:
+        """Goes to the right, top left reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_L_L(self) -> Trigger:
+        """Goes to the left, left reef face scoring position"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def reef_L_R(self) -> Trigger:
+        """Goes to the right, left reef face scoring position"""
+        raise NotImplementedError
+
+
+
 # Control schemes
 
 
@@ -249,6 +327,37 @@ class T16000M(DriverActionSet):
     def is_movement_commanded(self):
         return self.forward() + self.strafe() + self.turn() != 0
 
+
+class KeyboardScoringPositions(ScoringPositionsActionSet):
+    def __init__(self, port: int):
+        self.stick = CommandXboxController(port)
+
+    def reef_BR_L(self) -> Trigger:
+        return self.stick.x()
+    def reef_BR_R(self) -> Trigger:
+        return self.stick.a()
+    def reef_R_L(self) -> Trigger:
+        return self.stick.b()
+    def reef_R_R(self) -> Trigger:
+        return self.stick.y()
+    def reef_TR_L(self) -> Trigger:
+        return self.stick.rightTrigger()
+    def reef_TR_R(self) -> Trigger:
+        return self.stick.rightBumper()
+    def reef_TL_L(self) -> Trigger:
+        return self.stick.leftTrigger()
+    def reef_TL_R(self) -> Trigger:
+        return self.stick.leftBumper()
+    def reef_L_L(self) -> Trigger:
+        return self.stick.povUp()
+    def reef_L_R(self) -> Trigger:
+        return self.stick.povRight()
+
+    def reef_BL_L(self) -> Trigger:
+        return self.stick.povLeft()
+
+    def reef_BL_R(self) -> Trigger:
+        return self.stick.povDown()
 
 def deadband(value, band):
     return value if abs(value) > band else 0
