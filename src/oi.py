@@ -10,7 +10,7 @@ Any special logic (e.g. inverting the Y axis on a joystick) is also defined in a
 """
 
 from typing import Protocol
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 
 from commands2.button import CommandXboxController, CommandJoystick, Trigger, CommandPS4Controller
 
@@ -57,42 +57,36 @@ class DriverActionSet(Protocol):
         raise NotImplementedError
 
 
-# TODO: Map controller buttons & functions
 class OperatorActionSet(Protocol):
     # Elevator button functions
     @property
     @abstractmethod
     def loading_level(self) -> Trigger:
-        # Approach Loading Level
-        # ???
+        """Approach Loading Level"""
         raise NotImplementedError
 
     @property
     @abstractmethod
     def level_1(self) -> Trigger:
-        # Approach level 1
-        # A?
+        """Approach level 1"""
         raise NotImplementedError
 
     @property
     @abstractmethod
     def level_2(self) -> Trigger:
-        # Approach level 2
-        # X?
+        """Approach level 2"""
         raise NotImplementedError
 
     @property
     @abstractmethod
     def level_3(self) -> Trigger:
-        # Approach level 3
-        # B?
+        """Approach level 3"""
         raise NotImplementedError
 
     @property
     @abstractmethod
     def level_4(self) -> Trigger:
-        # Approach level 4
-        # Y?
+        """Approach level 4"""
         raise NotImplementedError
 
 
@@ -188,26 +182,18 @@ class XboxOperator(OperatorActionSet):
 
     @property
     def level_1(self) -> Trigger:
-        # Approach level 1
-        # A?
         return self.stick.a()
 
     @property
     def level_2(self) -> Trigger:
-        # Approach level 2
-        # X?
         return self.stick.x()
 
     @property
     def level_3(self) -> Trigger:
-        # Approach level 3
-        # B?
         return self.stick.b()
 
     @property
     def level_4(self) -> Trigger:
-        # Approach level 4
-        # Y?
         return self.stick.y()
 
 
@@ -251,7 +237,7 @@ class XboxDriver(DriverActionSet):
         return self.forward() + self.strafe() + self.turn() != 0
 
 
-class XBoxDriver(DriverActionSet):
+class PS4Driver(DriverActionSet):
     """Drive the robot with an PS4 controller"""
 
     def __init__(self, port: int):
@@ -291,7 +277,7 @@ class XBoxDriver(DriverActionSet):
         return self.forward() + self.strafe() + self.turn() != 0
 
 
-class T16000M(DriverActionSet):
+class T16000MDriver(DriverActionSet):
     """Drive the robot with an T.16000M flight stick controller"""
 
     def __init__(self, port: int):
@@ -308,7 +294,7 @@ class T16000M(DriverActionSet):
         return deadband(-self.stick.getRawAxis(0), 0.001)
 
     def turn(self) -> float:
-        return deadband(-self.stick.getRawAxis(2), 0.1) * 0.6
+        return deadband(-self.stick.getRawAxis(2), 0.01) * 0.6
 
     @property
     def reset_gyro(self) -> Trigger:
@@ -329,35 +315,62 @@ class T16000M(DriverActionSet):
 
 
 class KeyboardScoringPositions(ScoringPositionsActionSet):
+    """
+    Use a program on the Driver Station laptop to emulate an Xbox controller from a keyboard. That way, a keyboard
+    may be used as a button board.
+    """
+
     def __init__(self, port: int):
         self.stick = CommandXboxController(port)
 
+    @property
     def reef_BR_L(self) -> Trigger:
         return self.stick.x()
+
+    @property
     def reef_BR_R(self) -> Trigger:
         return self.stick.a()
+
+    @property
     def reef_R_L(self) -> Trigger:
         return self.stick.b()
+
+    @property
     def reef_R_R(self) -> Trigger:
         return self.stick.y()
+
+    @property
     def reef_TR_L(self) -> Trigger:
         return self.stick.rightTrigger()
+
+    @property
     def reef_TR_R(self) -> Trigger:
         return self.stick.rightBumper()
+
+    @property
     def reef_TL_L(self) -> Trigger:
         return self.stick.leftTrigger()
+
+    @property
     def reef_TL_R(self) -> Trigger:
         return self.stick.leftBumper()
+
+    @property
     def reef_L_L(self) -> Trigger:
         return self.stick.povUp()
+
+    @property
     def reef_L_R(self) -> Trigger:
         return self.stick.povRight()
 
+    @property
     def reef_BL_L(self) -> Trigger:
         return self.stick.povLeft()
 
+    @property
     def reef_BL_R(self) -> Trigger:
         return self.stick.povDown()
+
 
 def deadband(value, band):
     return value if abs(value) > band else 0

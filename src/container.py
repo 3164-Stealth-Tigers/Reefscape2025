@@ -17,12 +17,10 @@ from pathplannerlib.path import PathPlannerPath
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
-import constants
-
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants, ArmConstants, ElevatorConstants, ClimberConstants, ClawConstants
-from oi import XboxDriver, XboxOperator
+from oi import XboxDriver, XboxOperator, KeyboardScoringPositions
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
@@ -37,7 +35,8 @@ class RobotContainer:
 
         self.driver_joystick = XboxDriver(0)
         self.operator_joystick = XboxOperator(1)
-        self.sysid_joystick = CommandXboxController(2)
+        self.button_board = KeyboardScoringPositions(2)
+        self.sysid_joystick = CommandXboxController(3)
 
         # Configure drivetrain
         self.swerve = SwerveDrive(SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS)
@@ -106,12 +105,12 @@ class RobotContainer:
         self.driver_joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
 
+        """
         # Elevator buttons
         # self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(1), self.elevator))
         # self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(2), self.elevator))
         # self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(3), self.elevator))
 
-        """
         # Arm buttons
         self.joystick.stick.square().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(30)), self.arm))
         self.joystick.stick.circle().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
@@ -119,8 +118,6 @@ class RobotContainer:
         """
 
         # Configure Elevator Operator buttons
-
-        self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, ArmConstants.LEVEL_0_ROTATION)
 
         # LOADER HEIGHT (LEVEL 0)
         # RIGHT TRIGGER
