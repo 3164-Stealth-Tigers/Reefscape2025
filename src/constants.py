@@ -9,14 +9,31 @@ class DrivingConstants:
     FIELD_RELATIVE = True
 
     # Create Reef Constants (arrays/lists of floats)
-    REEF_LEFT_UPPER: list[float] = [3.801, 5.507, -33.621]  # [X, Y, HEADING]
-    REEF_RIGHT_UPPER: list[float] = [5.446, 5.391, 125.770]  # [X, Y, HEADING]
 
-    REEF_LEFT_CENTER: list[float] = [2.848, 4.189, -108.628] # [X, Y, HEADING]
-    REEF_RIGHT_CENTER: list[float] = [6.129, 3.842, 9.926] # [X, Y, HEADING]
+    # ALGAE LOCATIONS
+    ALGAE_LEFT_UPPER: list[float] = [3.801, 5.507, -33.621]  # [X, Y, HEADING]
+    ALGAE_RIGHT_UPPER: list[float] = [5.446, 5.391, 125.770]  # [X, Y, HEADING]
 
-    REEF_LEFT_LOWER: list[float] = [3.531, 2.697, 32.276] # [X, Y, HEADING]
-    REEF_RIGHT_LOWER: list[float] = [5.109, 2.486, 43.568] # [X, Y, HEADING]
+    ALGAE_LEFT_CENTER: list[float] = [2.848, 4.189, -108.628] # [X, Y, HEADING]
+    ALGAE_RIGHT_CENTER: list[float] = [6.129, 3.842, 9.926] # [X, Y, HEADING]
+
+    ALGAE_LEFT_LOWER: list[float] = [3.531, 2.697, 32.276] # [X, Y, HEADING]
+    ALGAE_RIGHT_LOWER: list[float] = [5.109, 2.486, 43.568] # [X, Y, HEADING]
+
+    # CORAL LOCATIONS
+
+    REEF_A: list[float] = [2.719, 4.200, 0] # [X, Y, HEADING (ROTATION)]
+    REEF_B: list[float] = [2.738, 3.864, 0] # [X, Y, HEADING (ROTATION)]
+    REEF_C: list[float] = [3.452, 2.605, 60] # [X, Y, HEADING (ROTATION)]
+    REEF_D: list[float] = [3.764, 2.422, 60] # [X, Y, HEADING (ROTATION)]
+    REEF_E: list[float] = [5.201, 2.420, 120] # [X, Y, HEADING (ROTATION)]
+    REEF_F: list[float] = [5.500, 2.585, 120] # [X, Y, HEADING (ROTATION)]
+    REEF_G: list[float] = [6.230, 3.857, 180] # [X, Y, HEADING (ROTATION)]
+    REEF_H: list[float] = [6.244, 4.198, 180] # [X, Y, HEADING (ROTATION)]
+    REEF_I: list[float] = [5.489, 5.474, -120] # [X, Y, HEADING (ROTATION)]
+    REEF_J: list[float] = [5.224, 5.624, -120] # [X, Y, HEADING (ROTATION)]
+    REEF_K: list[float] = [3.748, 5.627, -60] # [X, Y, HEADING (ROTATION)]
+    REEF_L: list[float] = [3.479, 5.464, -60] # [X, Y, HEADING (ROTATION)]
 
     # example usage(s): X,Y,HEADING = REEF_LEFT_CENTER
     # Y = REEF_LEFT_CENTER[2]

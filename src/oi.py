@@ -95,73 +95,73 @@ class ScoringPositionsActionSet(Protocol):
 
     @property
     @abstractmethod
-    def reef_BL_L(self) -> Trigger:
+    def reef_c(self) -> Trigger:
         """Goes to the left, bottom left reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_BL_R(self) -> Trigger:
+    def reef_d(self) -> Trigger:
         """Goes to the right, bottom left reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_BR_L(self) -> Trigger:
+    def reef_e(self) -> Trigger:
         """Goes to the left, bottom right reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_BR_R(self) -> Trigger:
+    def reef_f(self) -> Trigger:
         """Goes to the right, bottom right reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_R_L(self) -> Trigger:
+    def reef_g(self) -> Trigger:
         """Goes to the left, right reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_R_R(self) -> Trigger:
+    def reef_h(self) -> Trigger:
         """Goes to the right, right reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_TR_L(self) -> Trigger:
+    def reef_i(self) -> Trigger:
         """Goes to the left, top right reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_TR_R(self) -> Trigger:
+    def reef_j(self) -> Trigger:
         """Goes to the right, top right reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_TL_L(self) -> Trigger:
+    def reef_k(self) -> Trigger:
         """Goes to the left, top left reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_TL_R(self) -> Trigger:
+    def reef_l(self) -> Trigger:
         """Goes to the right, top left reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_L_L(self) -> Trigger:
+    def reef_a(self) -> Trigger:
         """Goes to the left, left reef face scoring position"""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def reef_L_R(self) -> Trigger:
+    def reef_b(self) -> Trigger:
         """Goes to the right, left reef face scoring position"""
         raise NotImplementedError
 
@@ -324,51 +324,51 @@ class KeyboardScoringPositions(ScoringPositionsActionSet):
         self.stick = CommandXboxController(port)
 
     @property
-    def reef_BR_L(self) -> Trigger:
+    def reef_e(self) -> Trigger:
         return self.stick.x()
 
     @property
-    def reef_BR_R(self) -> Trigger:
+    def reef_f(self) -> Trigger:
         return self.stick.a()
 
     @property
-    def reef_R_L(self) -> Trigger:
+    def reef_g(self) -> Trigger:
         return self.stick.b()
 
     @property
-    def reef_R_R(self) -> Trigger:
+    def reef_h(self) -> Trigger:
         return self.stick.y()
 
     @property
-    def reef_TR_L(self) -> Trigger:
+    def reef_i(self) -> Trigger:
         return self.stick.rightTrigger()
 
     @property
-    def reef_TR_R(self) -> Trigger:
+    def reef_j(self) -> Trigger:
         return self.stick.rightBumper()
 
     @property
-    def reef_TL_L(self) -> Trigger:
+    def reef_k(self) -> Trigger:
         return self.stick.leftTrigger()
 
     @property
-    def reef_TL_R(self) -> Trigger:
+    def reef_l(self) -> Trigger:
         return self.stick.leftBumper()
 
     @property
-    def reef_L_L(self) -> Trigger:
+    def reef_a(self) -> Trigger:
         return self.stick.povUp()
 
     @property
-    def reef_L_R(self) -> Trigger:
+    def reef_b(self) -> Trigger:
         return self.stick.povRight()
 
     @property
-    def reef_BL_L(self) -> Trigger:
+    def reef_c(self) -> Trigger:
         return self.stick.povLeft()
 
     @property
-    def reef_BL_R(self) -> Trigger:
+    def reef_d(self) -> Trigger:
         return self.stick.povDown()
 
 
