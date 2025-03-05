@@ -10,7 +10,7 @@ self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends
 """
 
 from commands2 import Command, InstantCommand, RunCommand
-from commands2.button import CommandXboxController
+from commands2.button import CommandXboxController, Trigger
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath
@@ -149,6 +149,15 @@ class RobotContainer:
             self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION)
         )
 
+        # Reef Positions
+        for reef_label, coordinates in DrivingConstants.CORAL_LOCATIONS.items():
+            # Get the Trigger object from the OI button board class by referencing its name
+            # e.g, self.button_board.reef_a is referenced by "reef_a"
+            button: Trigger = getattr(self.button_board, reef_label.lower())
+            # Use the x, y, theta coordinates from the constants file to make a Pose2d
+            pose = construct_Pose2d(*coordinates)
+            button.whileTrue(DriveToPoseCommand(self.swerve, pose, AUTONOMOUS_PARAMS))
+
         # SysId routines
         self.sysid_joystick.y().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.a().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
@@ -165,3 +174,7 @@ class RobotContainer:
 
     def register_named_commands(self):
         pass
+
+
+def construct_Pose2d(x: float, y: float, degrees: float) -> Pose2d:
+    return Pose2d(x, y, Rotation2d.fromDegrees(degrees))

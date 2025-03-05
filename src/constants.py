@@ -21,19 +21,20 @@ class DrivingConstants:
     ALGAE_RIGHT_LOWER: list[float] = [5.109, 2.486, 43.568] # [X, Y, HEADING]
 
     # CORAL LOCATIONS
-
-    REEF_A: list[float] = [2.719, 4.200, 0] # [X, Y, HEADING (ROTATION)]
-    REEF_B: list[float] = [2.738, 3.864, 0] # [X, Y, HEADING (ROTATION)]
-    REEF_C: list[float] = [3.452, 2.605, 60] # [X, Y, HEADING (ROTATION)]
-    REEF_D: list[float] = [3.764, 2.422, 60] # [X, Y, HEADING (ROTATION)]
-    REEF_E: list[float] = [5.201, 2.420, 120] # [X, Y, HEADING (ROTATION)]
-    REEF_F: list[float] = [5.500, 2.585, 120] # [X, Y, HEADING (ROTATION)]
-    REEF_G: list[float] = [6.230, 3.857, 180] # [X, Y, HEADING (ROTATION)]
-    REEF_H: list[float] = [6.244, 4.198, 180] # [X, Y, HEADING (ROTATION)]
-    REEF_I: list[float] = [5.489, 5.474, -120] # [X, Y, HEADING (ROTATION)]
-    REEF_J: list[float] = [5.224, 5.624, -120] # [X, Y, HEADING (ROTATION)]
-    REEF_K: list[float] = [3.748, 5.627, -60] # [X, Y, HEADING (ROTATION)]
-    REEF_L: list[float] = [3.479, 5.464, -60] # [X, Y, HEADING (ROTATION)]
+    CORAL_LOCATIONS = {
+        "REEF_A": (2.719, 4.200, 0),  # (X, Y, HEADING (ROTATION))
+        "REEF_B": (2.738, 3.864, 0),  # (X, Y, HEADING (ROTATION))
+        "REEF_C": (3.452, 2.605, 60),  # (X, Y, HEADING (ROTATION))
+        "REEF_D": (3.764, 2.422, 60),  # (X, Y, HEADING (ROTATION))
+        "REEF_E": (5.201, 2.420, 120),  # (X, Y, HEADING (ROTATION))
+        "REEF_F": (5.500, 2.585, 120),  # (X, Y, HEADING (ROTATION))
+        "REEF_G": (6.230, 3.857, 180),  # (X, Y, HEADING (ROTATION))
+        "REEF_H": (6.244, 4.198, 180),  # (X, Y, HEADING (ROTATION))
+        "REEF_I": (5.489, 5.474, -120),  # (X, Y, HEADING (ROTATION))
+        "REEF_J": (5.224, 5.624, -120),  # (X, Y, HEADING (ROTATION))
+        "REEF_K": (3.748, 5.627, -60),  # (X, Y, HEADING (ROTATION))
+        "REEF_L": (3.479, 5.464, -60),  # (X, Y, HEADING (ROTATION))
+    }
 
     # example usage(s): X,Y,HEADING = REEF_LEFT_CENTER
     # Y = REEF_LEFT_CENTER[2]
