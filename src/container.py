@@ -9,11 +9,12 @@ self.claw.IntakeCommand()
 self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends after the CORAL has been ejected.
 """
 
+import commands2
 from commands2 import Command, InstantCommand, RunCommand
 from commands2.button import CommandXboxController, Trigger
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder
-from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
@@ -156,7 +157,14 @@ class RobotContainer:
             button: Trigger = getattr(self.button_board, reef_label.lower())
             # Use the x, y, theta coordinates from the constants file to make a Pose2d
             pose = construct_Pose2d(*coordinates)
-            button.whileTrue(DriveToPoseCommand(self.swerve, pose, AUTONOMOUS_PARAMS))
+            # When the button is pushed, start pathfinding to the desired pose.
+            # Then, run DriveToPoseCommand perpetually to keep the robot locked onto the desired position
+            # even if we get pushed by another robot. The command stops when the button is released.
+            button.whileTrue(
+                AutoBuilder.pathfindToPose(pose, PathConstraints.unlimitedConstraints(12)) \
+                    .andThen(commands2.PrintCommand("Finished")) \
+                    .andThen(DriveToPoseCommand(self.swerve, pose, AUTONOMOUS_PARAMS))
+            )
 
         # SysId routines
         self.sysid_joystick.y().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
