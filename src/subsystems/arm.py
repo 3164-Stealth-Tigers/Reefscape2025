@@ -95,7 +95,7 @@ class Arm(commands2.Subsystem):
 
         motor_config.closedLoop \
             .setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder) \
-            .pid(0.4, 0, 0) \
+            .pid(ArmConstants.kP, 0, 0) \
             .outputRange(-1, 1) \
 
         self.motor.configure(

@@ -8,7 +8,7 @@ DriveToPoseCommand(self.swerve, pose, parameters) --> Locks the robot to a posit
 self.claw.IntakeCommand()
 self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends after the CORAL has been ejected.
 """
-
+import commands2
 import commands2
 from commands2 import Command, InstantCommand, RunCommand
 from commands2.button import CommandXboxController, Trigger
@@ -18,6 +18,7 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
+import oi
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants, ArmConstants, ElevatorConstants, ClimberConstants, ClawConstants
@@ -52,22 +53,22 @@ class RobotContainer:
 
         # Configure elevator subsystem
         self.elevator = Elevator()
-        #self.elevator.setDefaultCommand(
-        #    commands2.RunCommand(
-        #        lambda: self.elevator.set_duty_cycle(oi.deadband(-self.operator_joystick.getLeftY(), 0.05)),
-        #        self.elevator,
-        #    )
-        #)
+        self.elevator.setDefaultCommand(
+            commands2.RunCommand(
+                lambda: self.elevator.set_duty_cycle(oi.deadband(-self.operator_joystick.stick.getLeftY(), 0.08)),
+                self.elevator,
+            )
+        )
         SmartDashboard.putData("Elevator", self.elevator)
 
         # Configure arm subsystem
         self.arm = Arm()
-        #self.arm.setDefaultCommand(
-        #    commands2.RunCommand(
-        #        lambda: self.arm.set_duty_cycle(oi.deadband(-self.operator_joystick.getRightY(), 0.05)),
-        #        self.arm,
-        #    )
-        #)
+        self.arm.setDefaultCommand(
+            commands2.RunCommand(
+                lambda: self.arm.set_duty_cycle(oi.deadband(-self.operator_joystick.stick.getRightY(), 0.08)),
+                self.arm,
+            )
+        )
         SmartDashboard.putData("Arm", self.arm)
 
         # Configure climber subsystem
@@ -85,7 +86,7 @@ class RobotContainer:
         self.configure_button_bindings()
 
     def get_autonomous_command(self) -> Command:
-        return self.elevator.HomeElevator()
+        return Command()  # self.elevator.HomeElevator()
 
         """
         first_path = PathPlannerPath.fromPathFile("Start to R (mixed)")
@@ -106,12 +107,15 @@ class RobotContainer:
         self.driver_joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
 
-        """
+
         # Elevator buttons
-        # self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(1), self.elevator))
-        # self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(2), self.elevator))
+        self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(16 * 0.0254), self.elevator))
+        self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(24 * 0.0254), self.elevator))
+        #self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(0.956564), self.elevator))
+        #self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(1.31191), self.elevator))
         # self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(3), self.elevator))
 
+        """
         # Arm buttons
         self.joystick.stick.square().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(30)), self.arm))
         self.joystick.stick.circle().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
@@ -120,6 +124,7 @@ class RobotContainer:
 
         # Configure Elevator Operator buttons
 
+        """
         # LOADER HEIGHT (LEVEL 0)
         # RIGHT TRIGGER
         self.operator_joystick.loading_level.onTrue(
@@ -149,6 +154,7 @@ class RobotContainer:
         self.operator_joystick.level_4.onTrue(
             self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION)
         )
+        """
 
         # Reef Positions
         for reef_label, coordinates in DrivingConstants.CORAL_LOCATIONS.items():

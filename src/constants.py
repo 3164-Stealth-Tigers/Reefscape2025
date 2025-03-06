@@ -6,7 +6,7 @@ from swervepy import u
 
 class DrivingConstants:
     OPEN_LOOP = True
-    FIELD_RELATIVE = True
+    FIELD_RELATIVE = False
 
     # Create Reef Constants (arrays/lists of floats)
 
@@ -46,6 +46,7 @@ class ElevatorConstants:
     INVERT_RIGHT_MOTOR = True
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
+    kP = 10
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0
@@ -55,15 +56,15 @@ class ElevatorConstants:
     CARRIAGE_MASS = 9
     GEAR_RATIO = 5.45
 
-    MINIMUM_CARRIAGE_HEIGHT = 0
-    MAXIMUM_CARRIAGE_HEIGHT = 3
+    MINIMUM_CARRIAGE_HEIGHT = 5.0625 * 0.0254
+    MAXIMUM_CARRIAGE_HEIGHT = 1000#0.560820
     LIMIT_SWITCH_HEIGHT = 0
 
-    LEVEL_0_HEIGHT = 0.5
-    LEVEL_1_HEIGHT = 1
-    LEVEL_2_HEIGHT = 1.5
-    LEVEL_3_HEIGHT = 2
-    LEVEL_4_HEIGHT = 2.5
+    LEVEL_0_HEIGHT = 0
+    LEVEL_1_HEIGHT = 0
+    LEVEL_2_HEIGHT = 0
+    LEVEL_3_HEIGHT = 0
+    LEVEL_4_HEIGHT = 0
 
 
 class ClawConstants:
@@ -78,7 +79,9 @@ class ClawConstants:
 
 class ArmConstants:
     MOTOR_ID = 12
+
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
+    kP = 0.4
 
     # Physical measurements
     ARM_LENGTH = (1 * u.ft).m_as(u.m)  # Distance from pivot point to end of arm

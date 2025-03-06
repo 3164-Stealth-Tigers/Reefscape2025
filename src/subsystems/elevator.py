@@ -35,6 +35,7 @@ class Elevator(commands2.Subsystem):
         self.feedforward = wpimath.controller.ElevatorFeedforward(*ElevatorConstants.FEEDFORWARD_CONSTANTS)
 
         self.config()
+        self.reset()
 
         # Setup mechanism and gearbox for simulation
         gearbox = DCMotor.NEO(2)
@@ -95,9 +96,18 @@ class Elevator(commands2.Subsystem):
         global_config \
             .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
 
+        # 2.376 zero rot. height
+        # 4.043 1 rot. height
+
         global_config.encoder \
-            .positionConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO) \
-            .velocityConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO / 60)
+            .positionConversionFactor((4.043 - 2.376) * 0.0254 / 1) \
+            .velocityConversionFactor((4.043 - 2.376) * 0.0254 / 1 / 60)
+        # .velocityConversionFactor(1 / 60)
+            #.positionConversionFactor(1) \
+            #.positionConversionFactor((39 - 1.34) * 0.0254 / 5) \
+            #.velocityConversionFactor(((39 - 1.34) * 0.0254 / 5) / 60)
+#            .positionConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO) \
+#            .velocityConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO / 60)
 
         leader_config = rev.SparkBaseConfig()
         leader_config \
@@ -105,7 +115,7 @@ class Elevator(commands2.Subsystem):
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
 
         leader_config.closedLoop \
-            .pid(10, 0, 0) \
+            .pid(ElevatorConstants.kP, 0, 0) \
             .outputRange(-1, 1)
 
         leader_config.closedLoop.maxMotion \
@@ -136,7 +146,7 @@ class Elevator(commands2.Subsystem):
         )
 
     def reset(self):
-        self.encoder.setPosition(ElevatorConstants.LIMIT_SWITCH_HEIGHT)
+        self.encoder.setPosition(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
 
     def set_height(self, height: float):
         ff = self.feedforward.calculate(self.encoder.getVelocity())

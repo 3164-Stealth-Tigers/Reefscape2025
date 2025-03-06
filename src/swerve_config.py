@@ -12,10 +12,10 @@ WHEEL_BASE = (29.75 * u.inch).m_as(u.m)
 MAX_VELOCITY = 5.45 * (u.m / u.s)
 MAX_ANGULAR_VELOCITY = 500 * (u.deg / u.s)
 
-FL_ENCODER_OFFSET = 0  # degrees
-FR_ENCODER_OFFSET = 0
-RL_ENCODER_OFFSET = 0
-RR_ENCODER_OFFSET = 0
+FL_ENCODER_OFFSET = 19.072266 + 180  # degrees
+FR_ENCODER_OFFSET = 269.208984 - 180
+RL_ENCODER_OFFSET = 244.863281 - 180
+RR_ENCODER_OFFSET = 217.529297 - 180
 
 DRIVE_PARAMS = TypicalDriveComponentParameters(
     wheel_circumference=4 * math.pi * u.inch,
@@ -52,23 +52,23 @@ GYRO = Pigeon2Gyro(0, False)
 
 SWERVE_MODULES = (
     CoaxialSwerveModule(
-        NEOCoaxialDriveComponent(1, DRIVE_PARAMS),
-        NEOCoaxialAzimuthComponent(2, Rotation2d.fromDegrees(FL_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(1)),
+        NEOCoaxialDriveComponent(7, DRIVE_PARAMS),
+        NEOCoaxialAzimuthComponent(8, Rotation2d.fromDegrees(FL_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(1)),
         Translation2d(WHEEL_BASE / 2, TRACK_WIDTH / 2),
     ),
     CoaxialSwerveModule(
-        NEOCoaxialDriveComponent(3, DRIVE_PARAMS),
-        NEOCoaxialAzimuthComponent(4, Rotation2d.fromDegrees(FR_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(2)),
+        NEOCoaxialDriveComponent(5, DRIVE_PARAMS),
+        NEOCoaxialAzimuthComponent(6, Rotation2d.fromDegrees(FR_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(2)),
         Translation2d(WHEEL_BASE / 2, -TRACK_WIDTH / 2),
     ),
     CoaxialSwerveModule(
-        NEOCoaxialDriveComponent(5, DRIVE_PARAMS),
-        NEOCoaxialAzimuthComponent(6, Rotation2d.fromDegrees(RL_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(3)),
+        NEOCoaxialDriveComponent(3, DRIVE_PARAMS),
+        NEOCoaxialAzimuthComponent(4, Rotation2d.fromDegrees(RL_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(3)),
         Translation2d(-WHEEL_BASE / 2, TRACK_WIDTH / 2),
     ),
     CoaxialSwerveModule(
-        NEOCoaxialDriveComponent(7, DRIVE_PARAMS),
-        NEOCoaxialAzimuthComponent(8, Rotation2d.fromDegrees(RR_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(4)),
+        NEOCoaxialDriveComponent(1, DRIVE_PARAMS),
+        NEOCoaxialAzimuthComponent(2, Rotation2d.fromDegrees(RR_ENCODER_OFFSET), AZIMUTH_PARAMS, AbsoluteCANCoder(4)),
         Translation2d(-WHEEL_BASE / 2, -TRACK_WIDTH / 2),
     ),
 )
