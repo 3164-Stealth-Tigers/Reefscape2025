@@ -22,7 +22,7 @@ import oi
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
 from constants import DrivingConstants, ArmConstants, ElevatorConstants, ClimberConstants, ClawConstants
-from oi import XboxDriver, XboxOperator, KeyboardScoringPositions
+from oi import XboxDriver, XboxOperator, KeyboardScoringPositions, ArcadeScoringPositions
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
@@ -37,7 +37,7 @@ class RobotContainer:
 
         self.driver_joystick = XboxDriver(0)
         self.operator_joystick = XboxOperator(1)
-        self.button_board = KeyboardScoringPositions(2)
+        self.button_board = ArcadeScoringPositions(2)
         self.sysid_joystick = CommandXboxController(3)
 
         # Configure drivetrain
