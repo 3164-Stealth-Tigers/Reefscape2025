@@ -171,7 +171,9 @@ class RobotContainer:
             button.whileTrue(
                 AutoBuilder.pathfindToPose(pose, PathConstraints.unlimitedConstraints(12)) \
                     .andThen(commands2.PrintCommand("Finished")) \
-                    .andThen(DriveToPoseCommand(self.swerve, pose, AUTONOMOUS_PARAMS))
+                    .andThen(DriveToPoseCommand(self.swerve, pose, AUTONOMOUS_PARAMS)).beforeStarting(
+                    commands2.PrintCommand(f"{reef_label} pressed!")
+                )
             )
 
         # SysId routines

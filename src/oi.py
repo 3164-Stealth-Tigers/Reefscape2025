@@ -165,6 +165,16 @@ class ScoringPositionsActionSet(Protocol):
         """Goes to the right, left reef face scoring position"""
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def station_left(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def station_right(self) -> Trigger:
+        raise NotImplementedError
+
 
 
 # Control schemes
@@ -320,6 +330,14 @@ class KeyboardScoringPositions(ScoringPositionsActionSet):
     may be used as a button board.
     """
 
+    @property
+    def station_left(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def station_right(self) -> Trigger:
+        return Trigger()
+
     def __init__(self, port: int):
         self.stick = CommandXboxController(port)
 
@@ -370,6 +388,68 @@ class KeyboardScoringPositions(ScoringPositionsActionSet):
     @property
     def reef_d(self) -> Trigger:
         return self.stick.povDown()
+
+
+class ArcadeScoringPositions(ScoringPositionsActionSet):
+
+    def __init__(self, port: int):
+        self.stick = CommandJoystick(port)
+
+    @property
+    def station_right(self) -> Trigger:
+        return self.stick.axisGreaterThan(0, 0.5)  # Right
+
+    @property
+    def station_left(self) -> Trigger:
+        return self.stick.axisLessThan(0, -0.5)  # Left
+
+    @property
+    def reef_a(self) -> Trigger:
+        return self.stick.button(0)  # K1
+
+    @property
+    def reef_b(self) -> Trigger:
+        return self.stick.button(1)  # K2
+
+    @property
+    def reef_c(self) -> Trigger:
+        return self.stick.button(2)  # K3
+
+    @property
+    def reef_d(self) -> Trigger:
+        return self.stick.button(3)  # K4
+
+    @property
+    def reef_e(self) -> Trigger:
+        return self.stick.button(4)  # L1
+
+    @property
+    def reef_f(self) -> Trigger:
+        return self.stick.button(5)  # R1
+
+    @property
+    def reef_g(self) -> Trigger:
+        return self.stick.button(6)  # L2
+
+    @property
+    def reef_h(self) -> Trigger:
+        return self.stick.button(7)  # R2
+
+    @property
+    def reef_i(self) -> Trigger:
+        return self.stick.button(8)  # SE
+
+    @property
+    def reef_j(self) -> Trigger:
+        return self.stick.button(9)  # ST
+
+    @property
+    def reef_k(self) -> Trigger:
+        return self.stick.button(10)  # K12
+
+    @property
+    def reef_l(self) -> Trigger:
+        return self.stick.button(11)  # K12
 
 
 def deadband(value, band):
