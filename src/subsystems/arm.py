@@ -111,9 +111,9 @@ class Arm(commands2.Subsystem):
 
         :param angle: Counter-clockwise positive angle where 0 degrees is horizontal, facing the front of the robot.
         """
-        ff = self.feedforward.calculate(self.absolute_encoder.getPosition(), self.absolute_encoder.getVelocity())
+        ff = self.feedforward.calculate(self.angle().degrees(), self.absolute_encoder.getVelocity())
         self.controller.setReference(
-            angle.degrees(),
+            angle.degrees() + ArmConstants.ENCODER_OFFSET,
             rev.SparkBase.ControlType.kPosition,
             arbFeedforward=ff,
             arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
@@ -126,17 +126,18 @@ class Arm(commands2.Subsystem):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
 
     def angle(self) -> Rotation2d:
-        degrees = self.absolute_encoder.getPosition()
+        degrees = self.absolute_encoder.getPosition() - ArmConstants.ENCODER_OFFSET
         return Rotation2d.fromDegrees(degrees)
 
     def sysId_log(self, log: SysIdRoutineLog):
         log.motor("arm-pivot") \
             .voltage(self.motor.getAppliedOutput() * self.motor.getBusVoltage()) \
-            .angularPosition(self.absolute_encoder.getPosition()) \
+            .angularPosition(self.angle().degrees()) \
             .angularVelocity(self.absolute_encoder.getVelocity())
 
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
+        builder.addDoubleProperty("Angle", lambda: self.angle().degrees(), lambda degrees: self.set_angle(Rotation2d.fromDegrees(degrees)))
 
     def current_command_name(self) -> str:
         try:

@@ -43,7 +43,7 @@ class Elevator(commands2.Subsystem):
         plant = LinearSystemId.elevatorSystem(
             gearbox,
             ElevatorConstants.CARRIAGE_MASS,
-            ElevatorConstants.PULLEY_DIAMETER / 2,
+            ElevatorConstants.SPROCKET_PITCH_DIAMETER / 2,
             ElevatorConstants.GEAR_RATIO,
         )
         self.elevator_sim = ElevatorSim(
@@ -94,20 +94,15 @@ class Elevator(commands2.Subsystem):
         global_config = rev.SparkBaseConfig()
 
         global_config \
-            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake) \
+            .smartCurrentLimit(60)
 
         # 2.376 zero rot. height
         # 4.043 1 rot. height
 
         global_config.encoder \
-            .positionConversionFactor((4.043 - 2.376) * 0.0254 / 1) \
-            .velocityConversionFactor((4.043 - 2.376) * 0.0254 / 1 / 60)
-        # .velocityConversionFactor(1 / 60)
-            #.positionConversionFactor(1) \
-            #.positionConversionFactor((39 - 1.34) * 0.0254 / 5) \
-            #.velocityConversionFactor(((39 - 1.34) * 0.0254 / 5) / 60)
-#            .positionConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO) \
-#            .velocityConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO / 60)
+            .positionConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi)) \
+            .velocityConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi) * (1 / 60))
 
         leader_config = rev.SparkBaseConfig()
         leader_config \
@@ -116,7 +111,7 @@ class Elevator(commands2.Subsystem):
 
         leader_config.closedLoop \
             .pid(ElevatorConstants.kP, 0, 0) \
-            .outputRange(-1, 1)
+            .outputRange(-0.3, 0.3)
 
         leader_config.closedLoop.maxMotion \
             .maxVelocity(1) \
@@ -132,7 +127,7 @@ class Elevator(commands2.Subsystem):
         follower_config = rev.SparkBaseConfig()
         follower_config \
             .apply(global_config) \
-            .inverted(ElevatorConstants.INVERT_RIGHT_MOTOR)
+            .follow(ElevatorConstants.LEFT_MOTOR_ID, ElevatorConstants.INVERT_RIGHT_MOTOR)
 
         self.leader.configure(
             leader_config,
@@ -175,6 +170,9 @@ class Elevator(commands2.Subsystem):
     def carriage_height(self) -> float:
         return self.encoder.getPosition()
 
+    def carriage_height_inches(self) -> float:
+        return self.carriage_height() * 39.37
+
     def lower_limit(self) -> bool:
         """Return True if the lower limit switch is triggered."""
         # Hall Effect sensor returns False when magnet is detected.
@@ -187,7 +185,7 @@ class Elevator(commands2.Subsystem):
             .velocity(self.encoder.getVelocity())
 
     def initSendable(self, builder: SendableBuilder) -> None:
-        builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
+        builder.addDoubleProperty("Height", self.carriage_height_inches, lambda _: None)
         builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
 

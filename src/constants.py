@@ -43,21 +43,21 @@ class ElevatorConstants:
     LEFT_MOTOR_ID = 9
     RIGHT_MOTOR_ID = 10
     INVERT_LEFT_MOTOR = False
-    INVERT_RIGHT_MOTOR = True
+    INVERT_RIGHT_MOTOR = False
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
-    kP = 10
+    kP = 13
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0
 
     # Physical measurements
-    PULLEY_DIAMETER = (1.625 * u.inch).m_as(u.m)
+    SPROCKET_PITCH_DIAMETER = (1.757 * u.inch).m_as(u.m)
     CARRIAGE_MASS = 9
     GEAR_RATIO = 5.45
 
-    MINIMUM_CARRIAGE_HEIGHT = 5.0625 * 0.0254
-    MAXIMUM_CARRIAGE_HEIGHT = 1000#0.560820
+    MINIMUM_CARRIAGE_HEIGHT = (30.5 * u.inch).m_as(u.m)
+    MAXIMUM_CARRIAGE_HEIGHT = (80 * u.inch).m_as(u.m)  #0.560820
     LIMIT_SWITCH_HEIGHT = 0
 
     LEVEL_0_HEIGHT = 0
@@ -81,15 +81,17 @@ class ArmConstants:
     MOTOR_ID = 12
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
-    kP = 0.4
+    kP = 0.02
 
     # Physical measurements
-    ARM_LENGTH = (1 * u.ft).m_as(u.m)  # Distance from pivot point to end of arm
-    ARM_MASS = 5
-    GEAR_RATIO = 200
+    ARM_LENGTH = (13.5 * u.inch).m_as(u.m)  # Distance from pivot point to end of arm
+    ARM_MASS = 5.52
+    GEAR_RATIO = 125
 
     MINIMUM_ANGLE = -math.pi /2
     MAXIMUM_ANGLE = math.pi / 3
+
+    ENCODER_OFFSET = 201.58  # degrees
 
     LEVEL_0_ROTATION = Rotation2d.fromDegrees(0)
     LEVEL_1_ROTATION = Rotation2d.fromDegrees(35)

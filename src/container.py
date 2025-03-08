@@ -108,19 +108,21 @@ class RobotContainer:
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
 
 
+
         # Elevator buttons
-        self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(16 * 0.0254), self.elevator))
-        self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(24 * 0.0254), self.elevator))
+        self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(53 * 0.0254), self.elevator))
+        self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(71 * 0.0254), self.elevator))
         #self.driver_joystick.stick.povDown().whileTrue(RunCommand(lambda: self.elevator.set_height(0.956564), self.elevator))
         #self.driver_joystick.stick.povLeft().whileTrue(RunCommand(lambda: self.elevator.set_height(1.31191), self.elevator))
-        # self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(3), self.elevator))
+        self.driver_joystick.stick.povUp().whileTrue(RunCommand(lambda: self.elevator.set_height(80 * 0.0254), self.elevator))
 
-        """
         # Arm buttons
-        self.joystick.stick.square().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(30)), self.arm))
-        self.joystick.stick.circle().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
-        self.joystick.stick.cross().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(-45)), self.arm))
-        """
+        self.operator_joystick.stick.y().whileTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(30)), self.arm))
+        self.operator_joystick.stick.x().whileTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(60)), self.arm))
+        #self.joystick.stick.cross().onTrue(RunCommand(lambda: self.arm.set_angle(Rotation2d.fromDegrees(-45)), self.arm))
+
+        self.operator_joystick.stick.leftTrigger().whileTrue(self.claw.IntakeCommand().beforeStarting(commands2.PrintCommand("hi")))
+        self.operator_joystick.stick.leftBumper().whileTrue(self.claw.OuttakeCommand())
 
         # Configure Elevator Operator buttons
 
