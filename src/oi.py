@@ -89,6 +89,16 @@ class OperatorActionSet(Protocol):
         """Approach level 4"""
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def climber_up(self) -> Trigger:
+        raise
+
+    @property
+    @abstractmethod
+    def climber_down(self) -> Trigger:
+        raise NotImplementedError
+
 
 class ScoringPositionsActionSet(Protocol):
     # All of these positions are based on the view from robot sim (different sides of the hexagon)
@@ -205,6 +215,14 @@ class XboxOperator(OperatorActionSet):
     @property
     def level_4(self) -> Trigger:
         return self.stick.y()
+
+    @property
+    def climber_up(self) -> Trigger:
+        return self.stick.povUp()
+
+    @ property
+    def climber_down(self) -> Trigger:
+        return self.stick.povDown()
 
 
 class XboxDriver(DriverActionSet):
@@ -405,51 +423,51 @@ class ArcadeScoringPositions(ScoringPositionsActionSet):
 
     @property
     def reef_a(self) -> Trigger:
-        return self.stick.button(0)  # K1
+        return self.stick.button(1)  # K1
 
     @property
     def reef_b(self) -> Trigger:
-        return self.stick.button(1)  # K2
+        return self.stick.button(2)  # K2
 
     @property
     def reef_c(self) -> Trigger:
-        return self.stick.button(2)  # K3
+        return self.stick.button(3)  # K3
 
     @property
     def reef_d(self) -> Trigger:
-        return self.stick.button(3)  # K4
+        return self.stick.button(4)  # K4
 
     @property
     def reef_e(self) -> Trigger:
-        return self.stick.button(4)  # L1
+        return self.stick.button(5)  # L1
 
     @property
     def reef_f(self) -> Trigger:
-        return self.stick.button(5)  # R1
+        return self.stick.button(6)  # R1
 
     @property
     def reef_g(self) -> Trigger:
-        return self.stick.button(6)  # L2
+        return self.stick.button(7)  # L2
 
     @property
     def reef_h(self) -> Trigger:
-        return self.stick.button(7)  # R2
+        return self.stick.button(8)  # R2
 
     @property
     def reef_i(self) -> Trigger:
-        return self.stick.button(8)  # SE
+        return self.stick.button(9)  # SE
 
     @property
     def reef_j(self) -> Trigger:
-        return self.stick.button(9)  # ST
+        return self.stick.button(10)  # ST
 
     @property
     def reef_k(self) -> Trigger:
-        return self.stick.button(10)  # K12
+        return self.stick.button(11)  # K12
 
     @property
     def reef_l(self) -> Trigger:
-        return self.stick.button(11)  # K12
+        return self.stick.button(12)  # K12
 
 
 def deadband(value, band):

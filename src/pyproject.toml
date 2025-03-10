@@ -26,4 +26,4 @@ robotpy_extras = [
 ]
 
 # Other pip packages to install
-requires = ["Pint", "robotpy-playingwithfusion"]
+requires = ["Pint", "robotpy-playingwithfusion", "photonlibpy"]

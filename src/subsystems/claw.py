@@ -15,8 +15,9 @@ class Claw(commands2.Subsystem):
         self.motor = rev.SparkMax(ClawConstants.MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
 
         motor_config = rev.SparkBaseConfig()
-        motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)  # Prevent CORAL from getting stuck in the claw
+        motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)  # Prevent CORAL from getting stuck in the claw
         motor_config.smartCurrentLimit(20)
+        motor_config.inverted(True)
         self.motor.configure(
             motor_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
         )
@@ -28,7 +29,7 @@ class Claw(commands2.Subsystem):
 
     def intake(self):
         """Run the intake motors at a constant power, pulling CORAL into the claw."""
-        self.motor.set(0.5)
+        self.motor.set(0.2)
 
     def outtake(self):
         """Run the intake motors at a constant power, pushing CORAL out of the claw."""
@@ -55,4 +56,4 @@ class Claw(commands2.Subsystem):
 
     def OuttakeCommand(self):
         """Ejects the CORAL from the claw. This command ends after the CORAL has been ejected."""
-        return commands2.StartEndCommand(self.outtake, self.stop, self).onlyWhile(self.has_possession)
+        return commands2.StartEndCommand(self.outtake, self.stop, self)#.onlyWhile(self.has_possession)
