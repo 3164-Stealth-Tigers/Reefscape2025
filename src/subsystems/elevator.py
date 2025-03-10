@@ -11,7 +11,7 @@ from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
-from constants import ElevatorConstants
+from constants import ElevatorConstants, ArmConstants
 from sim_helper import SimHelper
 
 
@@ -64,7 +64,7 @@ class Elevator(commands2.Subsystem):
 
         # Create a new SysId routine for characterizing the arm
         self.sysId_routine = SysIdRoutine(
-            SysIdRoutine.Config(),
+            SysIdRoutine.Config(0.3, 2),
             SysIdRoutine.Mechanism(
                 self.set_voltage,
                 self.sysId_log,
@@ -111,7 +111,7 @@ class Elevator(commands2.Subsystem):
 
         leader_config.closedLoop \
             .pid(ElevatorConstants.kP, 0, 0) \
-            .outputRange(-0.3, 0.3)
+            .outputRange(-0.2, 0.3)
 
         leader_config.closedLoop.maxMotion \
             .maxVelocity(1) \
@@ -177,6 +177,11 @@ class Elevator(commands2.Subsystem):
         """Return True if the lower limit switch is triggered."""
         # Hall Effect sensor returns False when magnet is detected.
         return not self.limit_switch.get()
+
+    def at_height(self, goal_height: float) -> bool:
+        return goal_height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < goal_height + ElevatorConstants.HEIGHT_TOLERANCE
+
+
 
     def sysId_log(self, log: SysIdRoutineLog):
         log.motor("elevator") \

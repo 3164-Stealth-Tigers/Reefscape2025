@@ -122,6 +122,9 @@ class Arm(commands2.Subsystem):
     def set_duty_cycle(self, output: float):
         self.motor.set(output)
 
+    def at_rotation(self, goal_rotation: Rotation2d) -> bool:
+        return (goal_rotation - ArmConstants.ARM_TOLERANCE) < self.angle() < (goal_rotation + ArmConstants.ARM_TOLERANCE)
+
     def set_voltage(self, volts: float):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
 

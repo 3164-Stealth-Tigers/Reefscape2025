@@ -87,7 +87,8 @@ class RobotContainer:
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.elevator, self.arm, self.climber)
 
-        self.build_autos()
+        self.build_autos_speed1()
+        self.build_autos_speed2()
 
         # Register Named Commands for PathPlanner after initializing subsystems but before the rest of init
         self.register_named_commands()
@@ -105,7 +106,7 @@ class RobotContainer:
             # Set height/rotation to level 4 height/rotation and move to TR loading station (left)
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
-                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                                                         ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(first_path_speed1),
             ),
 
@@ -115,7 +116,7 @@ class RobotContainer:
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT,
-                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                                                         ArmConstants.LEVEL_0_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
             ),
 
@@ -125,7 +126,7 @@ class RobotContainer:
             # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
-                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                                                         ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
             ),
             self.claw.OuttakeCommand(),  # Deposit coral
@@ -133,7 +134,7 @@ class RobotContainer:
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT,
-                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                                                        ArmConstants.LEVEL_0_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
             ),
             self.claw.IntakeCommand(),  # Receive coral
@@ -141,7 +142,7 @@ class RobotContainer:
             # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
-                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                                                         ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
             ),
             self.claw.OuttakeCommand(),  # Deposit coral
@@ -149,7 +150,7 @@ class RobotContainer:
             # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
 
         )
-        self.auto_chooser.addOption("Speed 1", speed_1)
+        self.auto_chooser.setDefaultOption("Speed 1", speed_1)
 
     def build_autos_speed2(self):
         first_path_speed2 = PathPlannerPath.fromPathFile("start to br")
@@ -160,7 +161,7 @@ class RobotContainer:
 
             # Set height/rotation to level 4 height/rotation and move to br (Bottom Right - Right)
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(first_path_speed2),
             ),
 
@@ -169,7 +170,7 @@ class RobotContainer:
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, ArmConstants.LEVEL_0_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("br to macdonalds")),
             ),
 
@@ -178,21 +179,21 @@ class RobotContainer:
 
             # Set height/rotation to level 4 height/rotation and travel to BL (left)
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl")),
             ),
             self.claw.OuttakeCommand(),  # Deposit coral
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, ArmConstants.LEVEL_0_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("from bl back to bk")),
             ),
             self.claw.IntakeCommand(),  # Receive coral
 
-            # Set height/rotation to level 4 height/rotation and travel to BL (right)
+            # Set height/rotation to level 4 height/rotation and travel to BL loading station (right)
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl RIGHT SIDE OF THE CORAL")),
             ),
             self.claw.OuttakeCommand(),  # Deposit coral

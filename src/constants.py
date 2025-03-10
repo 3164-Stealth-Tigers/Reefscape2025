@@ -1,7 +1,16 @@
 import math
-from wpimath.geometry import Rotation2d
+from wpimath.geometry import Rotation2d, Transform3d, Rotation3d
 
 from swervepy import u
+
+
+def construct_Transform3d_inches(x: float, y: float, z: float, rotation: Rotation3d) -> Transform3d:
+    return Transform3d(
+        x * 0.0254,
+        y * 0.0254,
+        z * 0.0254,
+        rotation,
+    )
 
 
 class DrivingConstants:
@@ -34,6 +43,8 @@ class DrivingConstants:
         "REEF_J": (5.224, 5.624, -120),  # (X, Y, HEADING (ROTATION))
         "REEF_K": (3.748, 5.627, -60),  # (X, Y, HEADING (ROTATION))
         "REEF_L": (3.479, 5.464, -60),  # (X, Y, HEADING (ROTATION))
+        "STATION_RIGHT": (1.195, 1.008, -126), # (X, Y, HEADING (ROTATION))
+        "STATION_LEFT": (1.289, 7.065, 126), # (X, Y, HEADING (ROTATION))
     }
 
     # example usage(s): X,Y,HEADING = REEF_LEFT_CENTER
@@ -60,11 +71,13 @@ class ElevatorConstants:
     MAXIMUM_CARRIAGE_HEIGHT = (80 * u.inch).m_as(u.m)  #0.560820
     LIMIT_SWITCH_HEIGHT = 0
 
-    LEVEL_0_HEIGHT = 0
-    LEVEL_1_HEIGHT = 0
-    LEVEL_2_HEIGHT = 0
-    LEVEL_3_HEIGHT = 0
-    LEVEL_4_HEIGHT = 0
+    LEVEL_0_HEIGHT = (35 * u.inch).m_as(u.m)
+    LEVEL_1_HEIGHT = (40 * u.inch).m_as(u.m)
+    LEVEL_2_HEIGHT = (45 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (50 * u.inch).m_as(u.m)
+    LEVEL_4_HEIGHT = (75 * u.inch).m_as(u.m)
+
+    HEIGHT_TOLERANCE = 0.0254  # meters
 
 
 class ClawConstants:
@@ -99,6 +112,15 @@ class ArmConstants:
     LEVEL_3_ROTATION = Rotation2d.fromDegrees(35)
     LEVEL_4_ROTATION = Rotation2d.fromDegrees(0)
 
+    ARM_TOLERANCE = Rotation2d.fromDegrees(2)
 
 class ClimberConstants:
     MOTOR_ID = 13
+
+
+class VisionConstants:
+    CAMERAS = {
+        #"BackTagCamera": construct_Transform3d_inches(7.5,8,26,Rotation3d.fromDegrees(0, -195, 0)),
+        "LeftTagCamera": construct_Transform3d_inches(11.5,9,30,Rotation3d.fromDegrees(0, -15, 0)),  # Actually on the front
+    }
+
