@@ -10,6 +10,7 @@ self.claw.OuttakeCommand() --> Ejects the CORAL from the claw. This command ends
 """
 import commands2
 import commands2
+import wpilib
 from commands2 import Command, InstantCommand, RunCommand
 from commands2.button import CommandXboxController, Trigger
 from commands2.sysid import SysIdRoutine
@@ -18,6 +19,8 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
+import constants
+from constants import ElevatorConstants, ClawConstants
 import oi
 from commands.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand
@@ -29,6 +32,7 @@ from subsystems.climber import Climber
 from subsystems.elevator import Elevator
 from swerve_config import SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS
 from swervepy import SwerveDrive
+from vision import Vision
 
 
 class RobotContainer:
@@ -40,8 +44,12 @@ class RobotContainer:
         self.button_board = ArcadeScoringPositions(2)
         self.sysid_joystick = CommandXboxController(3)
 
+        self.auto_chooser = wpilib.SendableChooser()
+
+        camera_system = Vision()
+
         # Configure drivetrain
-        self.swerve = SwerveDrive(SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS)
+        self.swerve = SwerveDrive(SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS, camera_system.get_pose_estimation)
         self.teleop_drive_command = self.swerve.teleop_command(
             self.driver_joystick.forward,
             self.driver_joystick.strafe,
@@ -79,27 +87,126 @@ class RobotContainer:
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.elevator, self.arm, self.climber)
 
+        self.build_autos()
+
         # Register Named Commands for PathPlanner after initializing subsystems but before the rest of init
         self.register_named_commands()
 
         # Button bindings must be configured after every subsystem has been set up
         self.configure_button_bindings()
 
-    def get_autonomous_command(self) -> Command:
-        return Command()  # self.elevator.HomeElevator()
+    def build_autos_speed1(self):
+        first_path_speed1 = PathPlannerPath.fromPathFile("Start to TR (Speed1)")
 
-        """
-        first_path = PathPlannerPath.fromPathFile("Start to R (mixed)")
-        return commands2.SequentialCommandGroup(
-            AutoBuilder.resetOdom(first_path.getStartingHolonomicPose()),
-            commands2.ParallelRaceGroup(
-                self.superstructure.SetEndEffectorHeight(2.5, Rotation2d.fromDegrees(-30)),
-                AutoBuilder.followPath(first_path),
+        speed_1 = commands2.SequentialCommandGroup(
+            # Orient robot into starting position
+            AutoBuilder.resetOdom(first_path_speed1.getStartingHolonomicPose()),
+
+            # Set height/rotation to level 4 height/rotation and move to TR loading station (left)
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
+                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                AutoBuilder.followPath(first_path_speed1),
             ),
-            AutoBuilder.followPath(PathPlannerPath.fromPathFile("R to Loader 1 (mixed)")),
-            AutoBuilder.followPath(PathPlannerPath.fromPathFile("Loader 1 to TR (mixed)")),
+
+            # Place it
+            self.claw.OuttakeCommand(),
+
+            # Set height/rotation to level 0 height/rotation and travel to loading station
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT,
+                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
+            ),
+
+            # Accept new piece
+            self.claw.IntakeCommand(),
+
+            # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
+                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
+            ),
+            self.claw.OuttakeCommand(),  # Deposit coral
+
+            # Set height/rotation to level 0 height/rotation and travel to loading station
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT,
+                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
+            ),
+            self.claw.IntakeCommand(),  # Receive coral
+
+            # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
+                                                         Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
+            ),
+            self.claw.OuttakeCommand(),  # Deposit coral
+
+            # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
+
         )
-        """
+        self.auto_chooser.addOption("Speed 1", speed_1)
+
+    def build_autos_speed2(self):
+        first_path_speed2 = PathPlannerPath.fromPathFile("start to br")
+
+        speed_2 = commands2.SequentialCommandGroup(
+            # Orient robot into starting position
+            AutoBuilder.resetOdom(first_path_speed2.getStartingHolonomicPose()),
+
+            # Set height/rotation to level 4 height/rotation and move to br (Bottom Right - Right)
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                AutoBuilder.followPath(first_path_speed2),
+            ),
+
+            # Place it
+            self.claw.OuttakeCommand(),
+
+            # Set height/rotation to level 0 height/rotation and travel to loading station
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("br to macdonalds")),
+            ),
+
+            # Accept new piece
+            self.claw.IntakeCommand(),
+
+            # Set height/rotation to level 4 height/rotation and travel to BL (left)
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl")),
+            ),
+            self.claw.OuttakeCommand(),  # Deposit coral
+
+            # Set height/rotation to level 0 height/rotation and travel to loading station
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_0_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("from bl back to bk")),
+            ),
+            self.claw.IntakeCommand(),  # Receive coral
+
+            # Set height/rotation to level 4 height/rotation and travel to BL (right)
+            commands2.ParallelCommandGroup(
+                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, Rotation2d.fromDegrees(ArmConstants.LEVEL_4_ROTATION)),
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl RIGHT SIDE OF THE CORAL")),
+            ),
+            self.claw.OuttakeCommand(),  # Deposit coral
+
+            # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
+
+        )
+        self.auto_chooser.addOption("Speed 2", speed_2)
+
+    def get_autonomous_command(self) -> Command:
+        return self.auto_chooser.getSelected()
+
+        # Speed1
+        first_path = PathPlannerPath.fromPathFile("Start to TR (Speed1)")
 
     def configure_button_bindings(self):
         # Driving buttons
@@ -176,7 +283,12 @@ class RobotContainer:
                 )
             )
 
+        # Climber buttons
+        self.operator_joystick.climber_up.whileTrue(self.climber.RaiseRobot())
+        self.operator_joystick.climber_down.whileTrue(self.climber.LowerRobot())
+
         # SysId routines
+
         self.sysid_joystick.y().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.a().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
         self.sysid_joystick.b().whileTrue(self.elevator.SysIdDynamic(SysIdRoutine.Direction.kForward))
