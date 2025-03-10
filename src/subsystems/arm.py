@@ -123,7 +123,7 @@ class Arm(commands2.Subsystem):
         self.motor.set(output)
 
     def at_rotation(self, goal_rotation: Rotation2d) -> bool:
-        return (goal_rotation - ArmConstants.ARM_TOLERANCE) < self.angle() < (goal_rotation + ArmConstants.ARM_TOLERANCE)
+        return (goal_rotation - ArmConstants.ARM_TOLERANCE).radians() < self.angle().radians() < (goal_rotation + ArmConstants.ARM_TOLERANCE).radians()
 
     def set_voltage(self, volts: float):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)

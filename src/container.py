@@ -45,11 +45,18 @@ class RobotContainer:
         self.sysid_joystick = CommandXboxController(3)
 
         self.auto_chooser = wpilib.SendableChooser()
+        wpilib.SmartDashboard.putData(self.auto_chooser)
 
-        camera_system = Vision()
+        #camera_system = Vision()
 
         # Configure drivetrain
-        self.swerve = SwerveDrive(SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS, camera_system.get_pose_estimation)
+        self.swerve = SwerveDrive(
+            SWERVE_MODULES,
+            GYRO, MAX_VELOCITY,
+            MAX_ANGULAR_VELOCITY,
+            AUTONOMOUS_PARAMS,
+            #camera_system.get_pose_estimation,
+        )
         self.teleop_drive_command = self.swerve.teleop_command(
             self.driver_joystick.forward,
             self.driver_joystick.strafe,
@@ -100,6 +107,8 @@ class RobotContainer:
         first_path_speed1 = PathPlannerPath.fromPathFile("Start to TR (Speed1)")
 
         speed_1 = commands2.SequentialCommandGroup(
+            commands2.PrintCommand("started"),
+
             # Orient robot into starting position
             AutoBuilder.resetOdom(first_path_speed1.getStartingHolonomicPose()),
 
@@ -108,10 +117,11 @@ class RobotContainer:
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
                                                          ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(first_path_speed1),
+                commands2.PrintCommand("group 1")
             ),
 
             # Place it
-            self.claw.OuttakeCommand(),
+            # self.claw.OuttakeCommand(),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
@@ -121,7 +131,7 @@ class RobotContainer:
             ),
 
             # Accept new piece
-            self.claw.IntakeCommand(),
+            # self.claw.IntakeCommand(),
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
             commands2.ParallelCommandGroup(
@@ -129,7 +139,7 @@ class RobotContainer:
                                                          ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
             ),
-            self.claw.OuttakeCommand(),  # Deposit coral
+            # self.claw.OuttakeCommand(),  # Deposit coral
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
@@ -137,7 +147,7 @@ class RobotContainer:
                                                         ArmConstants.LEVEL_0_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
             ),
-            self.claw.IntakeCommand(),  # Receive coral
+            # self.claw.IntakeCommand(),  # Receive coral
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
             commands2.ParallelCommandGroup(
@@ -145,7 +155,7 @@ class RobotContainer:
                                                          ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
             ),
-            self.claw.OuttakeCommand(),  # Deposit coral
+            # self.claw.OuttakeCommand(),  # Deposit coral
 
             # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
 
@@ -166,7 +176,7 @@ class RobotContainer:
             ),
 
             # Place it
-            self.claw.OuttakeCommand(),
+            # self.claw.OuttakeCommand(),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
@@ -175,28 +185,28 @@ class RobotContainer:
             ),
 
             # Accept new piece
-            self.claw.IntakeCommand(),
+            # self.claw.IntakeCommand(),
 
             # Set height/rotation to level 4 height/rotation and travel to BL (left)
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl")),
             ),
-            self.claw.OuttakeCommand(),  # Deposit coral
+            # self.claw.OuttakeCommand(),  # Deposit coral
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, ArmConstants.LEVEL_0_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("from bl back to bk")),
             ),
-            self.claw.IntakeCommand(),  # Receive coral
+            # self.claw.IntakeCommand(),  # Receive coral
 
             # Set height/rotation to level 4 height/rotation and travel to BL loading station (right)
             commands2.ParallelCommandGroup(
                 self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, ArmConstants.LEVEL_4_ROTATION),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl RIGHT SIDE OF THE CORAL")),
             ),
-            self.claw.OuttakeCommand(),  # Deposit coral
+            # self.claw.OuttakeCommand(),  # Deposit coral
 
             # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
 
@@ -205,9 +215,6 @@ class RobotContainer:
 
     def get_autonomous_command(self) -> Command:
         return self.auto_chooser.getSelected()
-
-        # Speed1
-        first_path = PathPlannerPath.fromPathFile("Start to TR (Speed1)")
 
     def configure_button_bindings(self):
         # Driving buttons

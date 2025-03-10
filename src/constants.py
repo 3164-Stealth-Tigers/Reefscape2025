@@ -72,9 +72,9 @@ class ElevatorConstants:
     LIMIT_SWITCH_HEIGHT = 0
 
     LEVEL_0_HEIGHT = (35 * u.inch).m_as(u.m)
-    LEVEL_1_HEIGHT = (40 * u.inch).m_as(u.m)
-    LEVEL_2_HEIGHT = (45 * u.inch).m_as(u.m)
-    LEVEL_3_HEIGHT = (50 * u.inch).m_as(u.m)
+    LEVEL_1_HEIGHT = (30 * u.inch).m_as(u.m)
+    LEVEL_2_HEIGHT = (32 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (48 * u.inch).m_as(u.m)
     LEVEL_4_HEIGHT = (75 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
@@ -104,7 +104,7 @@ class ArmConstants:
     MINIMUM_ANGLE = -math.pi /2
     MAXIMUM_ANGLE = math.pi / 3
 
-    ENCODER_OFFSET = 201.58  # degrees
+    ENCODER_OFFSET = 0 #201.58  # degrees
 
     LEVEL_0_ROTATION = Rotation2d.fromDegrees(0)
     LEVEL_1_ROTATION = Rotation2d.fromDegrees(35)

@@ -52,7 +52,7 @@ class Elevator(commands2.Subsystem):
             ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT,
             ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT,
             True,
-            0,
+            ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT,
         )
 
         # Visual display of the elevator
@@ -83,7 +83,7 @@ class Elevator(commands2.Subsystem):
         self.elevator_sim.update(0.02)
 
         self.motor_sim.iterate(
-            self.elevator_sim.getVelocity(),
+            self.elevator_sim.getVelocity() * 2,
             RoboRioSim.getVInVoltage(),
             0.02
         )
@@ -190,7 +190,7 @@ class Elevator(commands2.Subsystem):
             .velocity(self.encoder.getVelocity())
 
     def initSendable(self, builder: SendableBuilder) -> None:
-        builder.addDoubleProperty("Height", self.carriage_height_inches, lambda _: None)
+        builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
         builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
 
