@@ -9,7 +9,7 @@ from swervepy.impl import TypicalDriveComponentParameters, NeutralMode, TypicalA
 
 TRACK_WIDTH = (17.75 * u.inch).m_as(u.m)
 WHEEL_BASE = (29.75 * u.inch).m_as(u.m)
-MAX_VELOCITY = 5.45 * (u.m / u.s)
+MAX_VELOCITY = 4.2 * (u.m / u.s)
 MAX_ANGULAR_VELOCITY = 500 * (u.deg / u.s)
 
 FL_ENCODER_OFFSET = 19.072266 + 180  # degrees
@@ -27,12 +27,12 @@ DRIVE_PARAMS = TypicalDriveComponentParameters(
     peak_current_limit=80,
     peak_current_duration=0.01,
     neutral_mode=NeutralMode.COAST,
-    kP=0,
+    kP=0.064395,
     kI=0,
     kD=0,
-    kS=0,
-    kV=0,
-    kA=0,
+    kS=0.18656,
+    kV=2.5833,
+    kA=0.40138,
     invert_motor=False,
 )
 AZIMUTH_PARAMS = TypicalAzimuthComponentParameters(
