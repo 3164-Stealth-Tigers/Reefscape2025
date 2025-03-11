@@ -297,10 +297,10 @@ class RobotContainer:
 
         # SysId routines
 
-        self.sysid_joystick.y().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
-        self.sysid_joystick.a().whileTrue(self.elevator.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
-        self.sysid_joystick.b().whileTrue(self.elevator.SysIdDynamic(SysIdRoutine.Direction.kForward))
-        self.sysid_joystick.x().whileTrue(self.elevator.SysIdDynamic(SysIdRoutine.Direction.kReverse))
+        self.sysid_joystick.y().whileTrue(self.swerve.sys_id_quasistatic(SysIdRoutine.Direction.kForward))
+        self.sysid_joystick.a().whileTrue(self.swerve.sys_id_quasistatic(SysIdRoutine.Direction.kReverse))
+        self.sysid_joystick.b().whileTrue(self.swerve.sys_id_dynamic(SysIdRoutine.Direction.kForward))
+        self.sysid_joystick.x().whileTrue(self.swerve.sys_id_dynamic(SysIdRoutine.Direction.kReverse))
 
         self.sysid_joystick.povUp().whileTrue(self.arm.SysIdQuasistatic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.povDown().whileTrue(self.arm.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))

@@ -14,7 +14,7 @@ def construct_Transform3d_inches(x: float, y: float, z: float, rotation: Rotatio
 
 
 class DrivingConstants:
-    OPEN_LOOP = True
+    OPEN_LOOP = False
     FIELD_RELATIVE = False
 
     # Create Reef Constants (arrays/lists of floats)
@@ -120,7 +120,8 @@ class ClimberConstants:
 
 class VisionConstants:
     CAMERAS = {
-        #"BackTagCamera": construct_Transform3d_inches(7.5,8,26,Rotation3d.fromDegrees(0, -195, 0)),
-        "LeftTagCamera": construct_Transform3d_inches(11.5,9,30,Rotation3d.fromDegrees(0, -15, 0)),  # Actually on the front
+        "FrontTagCamera": construct_Transform3d_inches(17, 0, 3, Rotation3d.fromDegrees(0, -15, 0)),
+        "BackTagCamera": construct_Transform3d_inches(8.5, -9, 22, Rotation3d.fromDegrees(0, 195,180)),
+        "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5, Rotation3d.fromDegrees(0, 195, -90)),
     }
 
