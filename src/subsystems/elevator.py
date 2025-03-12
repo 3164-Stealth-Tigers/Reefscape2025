@@ -192,6 +192,7 @@ class Elevator(commands2.Subsystem):
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
         builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
+        builder.addDoubleProperty("Applied Voltage", lambda: self.leader.getAppliedOutput() * self.leader.getBusVoltage(), lambda _: None)
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
 
     def current_command_name(self) -> str:
@@ -225,3 +226,7 @@ class Elevator(commands2.Subsystem):
         command.setName("Home Elevator")
         command.addRequirements(self)
         return command
+
+    def SetHeightCommand(self, height: float):
+        return commands2.RunCommand(lambda: self.set_height(height), self) \
+            .until(lambda: self.at_height(height))

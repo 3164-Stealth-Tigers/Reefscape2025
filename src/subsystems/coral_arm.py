@@ -159,6 +159,10 @@ class CoralArm(commands2.Subsystem):
         except AttributeError:
             return ""
 
+    def SetAngleCommand(self, angle: Rotation2d):
+        return commands2.RunCommand(lambda: self.set_angle(angle), self) \
+            .until(lambda: self.at_rotation(angle))
+
     def SysIdQuasistatic(self, direction: SysIdRoutine.Direction):
         return self.sysId_routine.quasistatic(direction)
 

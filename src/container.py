@@ -24,6 +24,7 @@ from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
 import constants
+import swerve_config
 from constants import ElevatorConstants, ClawConstants
 import oi
 from commands.superstructure import Superstructure
@@ -74,7 +75,7 @@ class RobotContainer:
         self.elevator = Elevator()
         self.elevator.setDefaultCommand(
             commands2.RunCommand(
-                lambda: self.elevator.set_duty_cycle(oi.deadband(-self.operator_joystick.stick.getLeftY(), 0.08)),
+                lambda: self.elevator.set_voltage(0.96 + oi.deadband(-self.operator_joystick.stick.getLeftY(), 0.08) * 6),
                 self.elevator,
             )
         )
@@ -99,7 +100,7 @@ class RobotContainer:
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.elevator, self.arm, self.climber)
 
-        #self.build_autos_speed1()
+        self.build_autos_speed1()
         #self.build_autos_speed2()
 
         # Register Named Commands for PathPlanner after initializing subsystems but before the rest of init
@@ -112,26 +113,21 @@ class RobotContainer:
         first_path_speed1 = PathPlannerPath.fromPathFile("Start to TR (Speed1)")
 
         speed_1 = commands2.SequentialCommandGroup(
-            commands2.PrintCommand("started"),
-
-            # Orient robot into starting position
-            AutoBuilder.resetOdom(first_path_speed1.getStartingHolonomicPose()),
-
-            # Set height/rotation to level 4 height/rotation and move to TR loading station (left)
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
-                                                         CoralArmConstants.LEVEL_4_ROTATION),
-                AutoBuilder.followPath(first_path_speed1),
-                commands2.PrintCommand("group 1")
+                # Orient robot into starting position and move to TR loading station (left)
+                AutoBuilder.pathfindThenFollowPath(first_path_speed1, swerve_config.PATHFINDING_CONSTRAINTS),
+                self.level_2_command(),
             ),
+
+            # Set height/rotation to level 4 height/rotation
+            self.level_4_command(),
 
             # Place it
             # self.claw.OuttakeCommand(),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT,
-                                                         CoralArmConstants.LEVEL_0_ROTATION),
+                self.level_0_command(),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
             ),
 
@@ -140,29 +136,34 @@ class RobotContainer:
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
-                                                         CoralArmConstants.LEVEL_4_ROTATION),
+                self.level_2_command(),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
             ),
+
+            self.level_4_command(),
+
             # self.claw.OuttakeCommand(),  # Deposit coral
+
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT,
-                                                         CoralArmConstants.LEVEL_0_ROTATION),
+                self.level_0_command(),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
             ),
             # self.claw.IntakeCommand(),  # Receive coral
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
             commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT,
-                                                         CoralArmConstants.LEVEL_4_ROTATION),
+                self.level_2_command(),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
             ),
+            self.level_4_command()
+
+
             # self.claw.OuttakeCommand(),  # Deposit coral
 
             # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
+
 
         )
         self.auto_chooser.setDefaultOption("Speed 1", speed_1)
@@ -248,45 +249,30 @@ class RobotContainer:
 
         # LOADER HEIGHT (LEVEL 0)
         # RIGHT TRIGGER
-        self.operator_joystick.loading_level.whileTrue(
-            commands2.RunCommand(lambda: self.elevator.set_height(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT), self.elevator).alongWith(
-                commands2.RunCommand(lambda: self.arm.set_angle(CoralArmConstants.LEVEL_0_ROTATION), self.arm)
-            )
-        )
+        self.operator_joystick.loading_level.onTrue(self.level_0_command())
+
 
         # LEVEL 1 HEIGHT
         # A BUTTON
         #self.operator_joystick.level_1.whileTrue(
         #    self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_1_HEIGHT, CoralArmConstants.LEVEL_1_ROTATION, False)
         #)
-        self.operator_joystick.level_1.whileTrue(
-            commands2.RunCommand(lambda: self.elevator.set_height(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT), self.elevator).alongWith(
-                commands2.RunCommand(lambda: self.arm.set_angle(CoralArmConstants.LEVEL_1_ROTATION), self.arm)
-            )
-        )
+        self.operator_joystick.level_1.onTrue(self.level_1_command())
 
         # LEVEL 2 HEIGHT
         # X BUTTON
-        self.operator_joystick.level_2.whileTrue(
-            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_2_HEIGHT, CoralArmConstants.LEVEL_2_ROTATION, False)
-        )
+        self.operator_joystick.level_2.onTrue(self.level_2_command())
 
         # LEVEL 3 HEIGHT
         # B BUTTON
-        self.operator_joystick.level_3.whileTrue(
-            self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_3_HEIGHT, CoralArmConstants.LEVEL_3_ROTATION, False)
-        )
+        self.operator_joystick.level_3.onTrue(self.level_3_command())
 
         # LEVEL 4 HEIGHT
         # Y BUTTON
-        #self.operator_joystick.level_4.whileTrue(
+        #self.operator_joystick.level_4.onTrue(
         #    self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, CoralArmConstants.LEVEL_4_ROTATION, False)
         #)
-        self.operator_joystick.level_4.whileTrue(
-            commands2.RunCommand(lambda: self.elevator.set_height(ElevatorConstants.LEVEL_4_HEIGHT), self.elevator).alongWith(
-                commands2.RunCommand(lambda: self.arm.set_angle(CoralArmConstants.LEVEL_4_ROTATION), self.arm)
-            )
-        )
+        self.operator_joystick.level_4.onTrue(self.level_4_command())
 
         # Reef Positions
         for reef_label, coordinates in DrivingConstants.CORAL_LOCATIONS.items():
@@ -299,11 +285,11 @@ class RobotContainer:
             # Then, run DriveToPoseCommand perpetually to keep the robot locked onto the desired position
             # even if we get pushed by another robot. The command stops when the button is released.
             button.whileTrue(
-                AutoBuilder.pathfindToPose(pose, PathConstraints.unlimitedConstraints(12)) \
-                    .andThen(commands2.PrintCommand("Finished")) \
+                AutoBuilder.pathfindToPose(pose, swerve_config.PATHFINDING_CONSTRAINTS) \
+                    .andThen(commands2.PrintCommand("Finished"))
                     .andThen(DriveToPoseCommand(self.swerve, pose, AUTONOMOUS_PARAMS)).beforeStarting(
                     commands2.PrintCommand(f"{reef_label} pressed!")
-                )
+                    )
             )
 
         # Climber buttons
@@ -327,6 +313,28 @@ class RobotContainer:
 
     def register_named_commands(self):
         pass
+
+    def level_0_command(self):
+        return self.elevator.SetHeightCommand(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT).alongWith(
+            self.arm.SetAngleCommand(CoralArmConstants.LEVEL_0_ROTATION)
+        )
+
+    def level_1_command(self):
+        return self.elevator.SetHeightCommand(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT).alongWith(
+            self.arm.SetAngleCommand(CoralArmConstants.LEVEL_1_ROTATION)
+        )
+
+    def level_2_command(self):
+        return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_2_HEIGHT, CoralArmConstants.LEVEL_2_ROTATION)
+
+    def level_3_command(self):
+        return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_3_HEIGHT, CoralArmConstants.LEVEL_3_ROTATION)
+
+    def level_4_command(self):
+        return self.elevator.SetHeightCommand(ElevatorConstants.LEVEL_4_HEIGHT).alongWith(
+            self.arm.SetAngleCommand(CoralArmConstants.LEVEL_4_ROTATION)
+        )
+
 
 
 def construct_Pose2d(x: float, y: float, degrees: float) -> Pose2d:

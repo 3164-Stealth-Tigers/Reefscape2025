@@ -76,7 +76,7 @@ class ElevatorConstants:
     LEVEL_1_HEIGHT = (30.5 * u.inch).m_as(u.m)
     LEVEL_2_HEIGHT = (31 * u.inch).m_as(u.m)
     LEVEL_3_HEIGHT = (46.5 * u.inch).m_as(u.m)
-    LEVEL_4_HEIGHT = (79 * u.inch).m_as(u.m)
+    LEVEL_4_HEIGHT = (80 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
 
@@ -135,8 +135,8 @@ class ClimberConstants:
 
 class VisionConstants:
     CAMERAS = {
-        "FrontTagCamera": construct_Transform3d_inches(17, 0, 3, Rotation3d.fromDegrees(0, -15, 0)),
-        "BackTagCamera": construct_Transform3d_inches(8.5, -9, 22, Rotation3d.fromDegrees(0, 0,180)),
-        "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5, Rotation3d.fromDegrees(0, 195, -90)),
+        "FrontTagCamera": construct_Transform3d_inches(9.5, 9, 7 + 1.75, Rotation3d.fromDegrees(0, 0, 0)),
+        "BackTagCamera": construct_Transform3d_inches(8.5, -9, 22 + 1.75, Rotation3d.fromDegrees(0, 0,180)),
+        "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5 + 1.75, Rotation3d.fromDegrees(0, 195, -90)),
     }
 

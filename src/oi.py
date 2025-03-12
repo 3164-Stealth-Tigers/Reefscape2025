@@ -237,17 +237,17 @@ class XboxDriver(DriverActionSet):
 
     def forward(self) -> float:
         """The robot's movement along the X axis, controlled by moving the left joystick up and down. From -1 to 1"""
-        return deadband(-self.stick.getLeftY(), 0.08)
+        return deadband(-self.stick.getLeftY(), 0.08) ** 2 * sgn(-self.stick.getLeftY())
 
     def strafe(self) -> float:
         """The robot's movement along the Y axis, controlled by moving the left joystick left and right. From -1 to 1"""
-        return deadband(-self.stick.getLeftX(), 0.08)
+        return deadband(-self.stick.getLeftX(), 0.08) ** 2 * sgn(-self.stick.getLeftX())
 
     def turn(self) -> float:
         """The robot's movement around the Z axis, controlled by moving the right joystick left and right.
         From -1 to 1, CCW+
         """
-        return deadband(-self.stick.getRightX(), 0.08) * 0.6
+        return (deadband(-self.stick.getRightX(), 0.08) * 0.7) ** 2 * sgn(-self.stick.getRightX())
 
     @property
     def reset_gyro(self) -> Trigger:
@@ -472,3 +472,6 @@ class ArcadeScoringPositions(ScoringPositionsActionSet):
 
 def deadband(value, band):
     return value if abs(value) > band else 0
+
+def sgn(x):
+    return 1 if x > 0 else -1

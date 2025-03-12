@@ -1,5 +1,6 @@
 import math
 
+from pathplannerlib.path import PathConstraints
 from wpimath.geometry import Translation2d, Rotation2d
 
 from constants import DrivingConstants
@@ -73,4 +74,5 @@ SWERVE_MODULES = (
     ),
 )
 
-AUTONOMOUS_PARAMS = TrajectoryFollowerParameters(5, 5, DrivingConstants.OPEN_LOOP)
+AUTONOMOUS_PARAMS = TrajectoryFollowerParameters(3, 3, DrivingConstants.OPEN_LOOP)
+PATHFINDING_CONSTRAINTS = PathConstraints(1, 10, 100, 1000, 12)
