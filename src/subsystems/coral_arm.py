@@ -10,21 +10,21 @@ from wpimath.geometry import Rotation2d
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder
 
-from constants import ArmConstants
+from constants import CoralArmConstants
 from sim_helper import SimHelper
 
 
-class Arm(commands2.Subsystem):
+class CoralArm(commands2.Subsystem):
     def __init__(self):
         super().__init__()
-        self.setName("Arm")
+        self.setName("Coral Arm")
 
         # Setup motors
-        self.motor = rev.SparkFlex(ArmConstants.MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
+        self.motor = rev.SparkFlex(CoralArmConstants.MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
         self.absolute_encoder = self.motor.getAbsoluteEncoder()  # REV Through Bore Encoder
         self.controller = self.motor.getClosedLoopController()
 
-        self.feedforward = wpimath.controller.ArmFeedforward(*ArmConstants.FEEDFORWARD_CONSTANTS)
+        self.feedforward = wpimath.controller.ArmFeedforward(*CoralArmConstants.FEEDFORWARD_CONSTANTS)
 
         self.config()
 
@@ -32,15 +32,15 @@ class Arm(commands2.Subsystem):
         self.absolute_encoder_sim = rev.SparkAbsoluteEncoderSim(self.motor)
         gearbox = DCMotor.neoVortex(1)
         self.motor_sim = rev.SparkFlexSim(self.motor, gearbox)
-        moment = SingleJointedArmSim.estimateMOI(ArmConstants.ARM_LENGTH, ArmConstants.ARM_MASS)
-        plant = LinearSystemId.singleJointedArmSystem(gearbox, moment, ArmConstants.GEAR_RATIO)
+        moment = SingleJointedArmSim.estimateMOI(CoralArmConstants.ARM_LENGTH, CoralArmConstants.ARM_MASS)
+        plant = LinearSystemId.singleJointedArmSystem(gearbox, moment, CoralArmConstants.GEAR_RATIO)
         self.arm_sim = SingleJointedArmSim(
             plant,
             gearbox,
-            ArmConstants.ARM_MASS,
-            ArmConstants.ARM_MASS,
-            ArmConstants.MINIMUM_ANGLE,
-            ArmConstants.MAXIMUM_ANGLE,
+            CoralArmConstants.ARM_MASS,
+            CoralArmConstants.ARM_MASS,
+            CoralArmConstants.MINIMUM_ANGLE.radians(),
+            CoralArmConstants.MAXIMUM_ANGLE.radians(),
             True,
             0,
         )
@@ -52,12 +52,17 @@ class Arm(commands2.Subsystem):
 
         # Create a new SysId routine for characterizing the arm
         self.sysId_routine = SysIdRoutine(
-            SysIdRoutine.Config(),
+            SysIdRoutine.Config(0.25, 3),
             SysIdRoutine.Mechanism(
                 self.set_voltage,
                 self.sysId_log,
                 self,
             ),
+        )
+
+        # Reset NEO encoder to absolute encoder
+        self.motor.getEncoder().setPosition(
+            self.absolute_encoder.getPosition()
         )
 
         wpilib.SmartDashboard.putData("Arm Mechanism", mech)
@@ -83,20 +88,26 @@ class Arm(commands2.Subsystem):
         motor_config = rev.SparkBaseConfig()
 
         motor_config \
-            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake) \
 
         motor_config.absoluteEncoder \
             .positionConversionFactor(360) \
             .velocityConversionFactor(360 / 60)
 
         motor_config.encoder \
-            .positionConversionFactor(360 / ArmConstants.GEAR_RATIO) \
-            .velocityConversionFactor(360 / ArmConstants.GEAR_RATIO / 60)
+            .positionConversionFactor(360 / CoralArmConstants.GEAR_RATIO) \
+            .velocityConversionFactor(360 / CoralArmConstants.GEAR_RATIO / 60)
 
         motor_config.closedLoop \
             .setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder) \
-            .pid(ArmConstants.kP, 0, 0) \
+            .pid(CoralArmConstants.kP, 0, 0) \
             .outputRange(-1, 1) \
+
+        motor_config.softLimit \
+            .forwardSoftLimit(CoralArmConstants.MAXIMUM_ANGLE.degrees() + CoralArmConstants.ENCODER_OFFSET) \
+            .reverseSoftLimit(CoralArmConstants.MINIMUM_ANGLE.degrees() + CoralArmConstants.ENCODER_OFFSET) \
+            .forwardSoftLimitEnabled(True) \
+            .reverseSoftLimitEnabled(True) \
 
         self.motor.configure(
             motor_config,
@@ -113,7 +124,7 @@ class Arm(commands2.Subsystem):
         """
         ff = self.feedforward.calculate(self.angle().degrees(), self.absolute_encoder.getVelocity())
         self.controller.setReference(
-            angle.degrees() + ArmConstants.ENCODER_OFFSET,
+            angle.degrees() + CoralArmConstants.ENCODER_OFFSET,
             rev.SparkBase.ControlType.kPosition,
             arbFeedforward=ff,
             arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
@@ -123,13 +134,13 @@ class Arm(commands2.Subsystem):
         self.motor.set(output)
 
     def at_rotation(self, goal_rotation: Rotation2d) -> bool:
-        return (goal_rotation - ArmConstants.ARM_TOLERANCE).radians() < self.angle().radians() < (goal_rotation + ArmConstants.ARM_TOLERANCE).radians()
+        return (goal_rotation - CoralArmConstants.ARM_TOLERANCE).radians() < self.angle().radians() < (goal_rotation + CoralArmConstants.ARM_TOLERANCE).radians()
 
     def set_voltage(self, volts: float):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
 
     def angle(self) -> Rotation2d:
-        degrees = self.absolute_encoder.getPosition() - ArmConstants.ENCODER_OFFSET
+        degrees = self.absolute_encoder.getPosition() - CoralArmConstants.ENCODER_OFFSET
         return Rotation2d.fromDegrees(degrees)
 
     def sysId_log(self, log: SysIdRoutineLog):

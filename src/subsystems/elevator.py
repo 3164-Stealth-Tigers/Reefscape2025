@@ -11,7 +11,7 @@ from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
-from constants import ElevatorConstants, ArmConstants
+from constants import ElevatorConstants, CoralArmConstants
 from sim_helper import SimHelper
 
 
