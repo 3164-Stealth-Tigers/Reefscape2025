@@ -2,6 +2,7 @@ import commands2
 import rev
 import playingwithfusion as pwf
 from commands2 import Command
+from wpiutil import SendableBuilder
 
 from constants import ClawConstants
 
@@ -24,8 +25,8 @@ class Claw(commands2.Subsystem):
 
         # Range sensor to detect coral possession
         self.distance_sensor = pwf.TimeOfFlight(ClawConstants.ToF_SENSOR_ID)
-
-        #distance = self.distance_sensor.getRange()
+        self.distance_sensor.setRangeOfInterest(8, 8, 12, 12)
+        self.distance_sensor.setRangingMode(pwf.TimeOfFlight.RangingMode.kShort, 500)
 
     def intake(self):
         """Run the intake motors at a constant power, pulling CORAL into the claw."""
@@ -44,11 +45,15 @@ class Claw(commands2.Subsystem):
         # If the distance reported by the sensor is less than a certain known distance,
         # a CORAL is sitting above the sensor; therefore, the claw has possession
 
-        return self.distance_sensor.getRange() <= ClawConstants.ToF_MIN_DISTANCE
+       #print(self.distance_sensor.getStatus().name)
+        return self.distance_sensor.getStatus().name in ("Status.kValid", "Status.???")
 
 
         # If the intake motors are stalled, the claw has possession of a game piece
          #return self.motor.getOutputCurrent() > (ClawConstants.CURRENT_LIMIT_AMPS - 2)
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        builder.addBooleanProperty("Has Possession?", self.has_possession, lambda _: None)
 
     def IntakeCommand(self):
         """Pulls the CORAL into the claw. This command will not end on its own; it must be interrupted by the user."""
