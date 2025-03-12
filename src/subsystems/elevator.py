@@ -11,7 +11,7 @@ from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
-from constants import ElevatorConstants
+from constants import ElevatorConstants, ArmConstants
 from sim_helper import SimHelper
 
 
@@ -35,6 +35,7 @@ class Elevator(commands2.Subsystem):
         self.feedforward = wpimath.controller.ElevatorFeedforward(*ElevatorConstants.FEEDFORWARD_CONSTANTS)
 
         self.config()
+        self.reset()
 
         # Setup mechanism and gearbox for simulation
         gearbox = DCMotor.NEO(2)
@@ -42,7 +43,7 @@ class Elevator(commands2.Subsystem):
         plant = LinearSystemId.elevatorSystem(
             gearbox,
             ElevatorConstants.CARRIAGE_MASS,
-            ElevatorConstants.PULLEY_DIAMETER / 2,
+            ElevatorConstants.SPROCKET_PITCH_DIAMETER / 2,
             ElevatorConstants.GEAR_RATIO,
         )
         self.elevator_sim = ElevatorSim(
@@ -51,7 +52,7 @@ class Elevator(commands2.Subsystem):
             ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT,
             ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT,
             True,
-            0,
+            ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT,
         )
 
         # Visual display of the elevator
@@ -63,7 +64,7 @@ class Elevator(commands2.Subsystem):
 
         # Create a new SysId routine for characterizing the arm
         self.sysId_routine = SysIdRoutine(
-            SysIdRoutine.Config(),
+            SysIdRoutine.Config(0.3, 2),
             SysIdRoutine.Mechanism(
                 self.set_voltage,
                 self.sysId_log,
@@ -82,7 +83,7 @@ class Elevator(commands2.Subsystem):
         self.elevator_sim.update(0.02)
 
         self.motor_sim.iterate(
-            self.elevator_sim.getVelocity(),
+            self.elevator_sim.getVelocity() * 2,
             RoboRioSim.getVInVoltage(),
             0.02
         )
@@ -93,11 +94,15 @@ class Elevator(commands2.Subsystem):
         global_config = rev.SparkBaseConfig()
 
         global_config \
-            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake) \
+            .smartCurrentLimit(60)
+
+        # 2.376 zero rot. height
+        # 4.043 1 rot. height
 
         global_config.encoder \
-            .positionConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO) \
-            .velocityConversionFactor(ElevatorConstants.PULLEY_DIAMETER * math.pi / ElevatorConstants.GEAR_RATIO / 60)
+            .positionConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi)) \
+            .velocityConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi) * (1 / 60))
 
         leader_config = rev.SparkBaseConfig()
         leader_config \
@@ -105,8 +110,8 @@ class Elevator(commands2.Subsystem):
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
 
         leader_config.closedLoop \
-            .pid(10, 0, 0) \
-            .outputRange(-1, 1)
+            .pid(ElevatorConstants.kP, 0, 0) \
+            .outputRange(-0.2, 0.3)
 
         leader_config.closedLoop.maxMotion \
             .maxVelocity(1) \
@@ -122,7 +127,7 @@ class Elevator(commands2.Subsystem):
         follower_config = rev.SparkBaseConfig()
         follower_config \
             .apply(global_config) \
-            .inverted(ElevatorConstants.INVERT_RIGHT_MOTOR)
+            .follow(ElevatorConstants.LEFT_MOTOR_ID, ElevatorConstants.INVERT_RIGHT_MOTOR)
 
         self.leader.configure(
             leader_config,
@@ -136,7 +141,7 @@ class Elevator(commands2.Subsystem):
         )
 
     def reset(self):
-        self.encoder.setPosition(ElevatorConstants.LIMIT_SWITCH_HEIGHT)
+        self.encoder.setPosition(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
 
     def set_height(self, height: float):
         ff = self.feedforward.calculate(self.encoder.getVelocity())
@@ -165,10 +170,18 @@ class Elevator(commands2.Subsystem):
     def carriage_height(self) -> float:
         return self.encoder.getPosition()
 
+    def carriage_height_inches(self) -> float:
+        return self.carriage_height() * 39.37
+
     def lower_limit(self) -> bool:
         """Return True if the lower limit switch is triggered."""
         # Hall Effect sensor returns False when magnet is detected.
         return not self.limit_switch.get()
+
+    def at_height(self, goal_height: float) -> bool:
+        return goal_height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < goal_height + ElevatorConstants.HEIGHT_TOLERANCE
+
+
 
     def sysId_log(self, log: SysIdRoutineLog):
         log.motor("elevator") \

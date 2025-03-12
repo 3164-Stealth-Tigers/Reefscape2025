@@ -40,4 +40,6 @@ class Superstructure:
 
         return commands2.RunCommand(lambda: self.arm.set_angle(angle), self.arm).alongWith(
             commands2.RunCommand(lambda: self.elevator.set_height(carriage_height), self.elevator)
+        ).until(lambda: self.elevator.at_height(carriage_height) and self.arm.at_rotation(angle)).beforeStarting(
+            commands2.PrintCommand(f"Height: {carriage_height}, Angle: {angle.degrees()}")
         )
