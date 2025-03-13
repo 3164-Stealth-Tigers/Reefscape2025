@@ -11,9 +11,9 @@ from subsystems.elevator import Elevator
 
 
 class Superstructure:
-    def __init__(self, elevator: Elevator, arm: CoralArm, climber: Climber):
+    def __init__(self, elevator: Elevator, coral_arm: CoralArm, climber: Climber):
         self.elevator = elevator
-        self.arm = arm
+        self.coral_arm = coral_arm
         self.climber = climber
 
     def SetEndEffectorHeight(self, end_effector_height: float, angle: Optional[Rotation2d] = None):
@@ -38,6 +38,6 @@ class Superstructure:
         if carriage_height > ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT or carriage_height < ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT:
             raise Exception("Calculated carriage height is out of bounds.")
 
-        return self.arm.SetAngleCommand(angle) \
+        return self.coral_arm.SetAngleCommand(angle) \
             .alongWith(self.elevator.SetHeightCommand(carriage_height)) \
             .beforeStarting(commands2.PrintCommand(f"Height: {carriage_height}, Angle: {angle.degrees()}"))

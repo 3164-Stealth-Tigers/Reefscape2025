@@ -3,7 +3,7 @@ from typing import Optional
 
 import photonlibpy as pv
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
-from wpimath.geometry import Transform3d, Pose2d
+from wpimath.geometry import Pose2d
 
 from constants import VisionConstants
 

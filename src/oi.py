@@ -99,6 +99,26 @@ class OperatorActionSet(Protocol):
     def climber_down(self) -> Trigger:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def intake(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def outtake(self) -> Trigger:
+        raise NotImplementedError
+
+    @abstractmethod
+    def elevator(self) -> float:
+        """Manual control for elevator. Positive number moves elevator up, away from ground."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def coral_arm(self) -> float:
+        """Manual control for coral arm. Positive number moves coral arm counterclockwise."""
+        raise NotImplementedError
+
 
 class ScoringPositionsActionSet(Protocol):
     # All of these positions are based on the view from robot sim (different sides of the hexagon)
@@ -220,9 +240,23 @@ class XboxOperator(OperatorActionSet):
     def climber_up(self) -> Trigger:
         return self.stick.povUp()
 
-    @ property
+    @property
     def climber_down(self) -> Trigger:
         return self.stick.povDown()
+
+    def elevator(self) -> float:
+        return deadband(-self.stick.getLeftY(), 0.08)
+
+    def coral_arm(self) -> float:
+        return deadband(-self.stick.getRightY(), 0.08)
+
+    @property
+    def intake(self) -> Trigger:
+        return self.stick.leftTrigger()
+
+    @property
+    def outtake(self) -> Trigger:
+        return self.stick.leftBumper()
 
 
 class XboxDriver(DriverActionSet):

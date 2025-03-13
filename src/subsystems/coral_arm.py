@@ -26,6 +26,9 @@ class CoralArm(commands2.Subsystem):
 
         self.feedforward = wpimath.controller.ArmFeedforward(*CoralArmConstants.FEEDFORWARD_CONSTANTS)
 
+        # Use an encoder offset on the real robot, but don't offset the encoder in simulation
+        self.encoder_offset = CoralArmConstants.ENCODER_OFFSET if wpilib.RobotBase.isReal() else 0
+
         self.config()
 
         # Setup mechanism and gearbox for simulation
@@ -104,8 +107,8 @@ class CoralArm(commands2.Subsystem):
             .outputRange(-1, 1) \
 
         motor_config.softLimit \
-            .forwardSoftLimit(CoralArmConstants.MAXIMUM_ANGLE.degrees() + CoralArmConstants.ENCODER_OFFSET) \
-            .reverseSoftLimit(CoralArmConstants.MINIMUM_ANGLE.degrees() + CoralArmConstants.ENCODER_OFFSET) \
+            .forwardSoftLimit(CoralArmConstants.MAXIMUM_ANGLE.degrees() + self.encoder_offset) \
+            .reverseSoftLimit(CoralArmConstants.MINIMUM_ANGLE.degrees() + self.encoder_offset) \
             .forwardSoftLimitEnabled(True) \
             .reverseSoftLimitEnabled(True) \
 
@@ -124,7 +127,7 @@ class CoralArm(commands2.Subsystem):
         """
         ff = self.feedforward.calculate(self.angle().degrees(), self.absolute_encoder.getVelocity())
         self.controller.setReference(
-            angle.degrees() + CoralArmConstants.ENCODER_OFFSET,
+            angle.degrees() + self.encoder_offset,
             rev.SparkBase.ControlType.kPosition,
             arbFeedforward=ff,
             arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
@@ -140,7 +143,7 @@ class CoralArm(commands2.Subsystem):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
 
     def angle(self) -> Rotation2d:
-        degrees = self.absolute_encoder.getPosition() - CoralArmConstants.ENCODER_OFFSET
+        degrees = self.absolute_encoder.getPosition() - self.encoder_offset
         return Rotation2d.fromDegrees(degrees)
 
     def sysId_log(self, log: SysIdRoutineLog):
