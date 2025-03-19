@@ -1,9 +1,9 @@
-from functools import singledispatch
+from functools import singledispatch, cache
 
 from wpilib import DriverStation
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d, Transform2d
 
-from constants import FieldConstants, RobotPhysicalConstants
+from constants import FieldConstants, RobotPhysicalConstants, DrivingConstants
 
 
 @singledispatch
@@ -25,6 +25,9 @@ def _(rotation: Rotation2d) -> Rotation2d:
     return rotation
 
 
+# We should be able to cache the results of these functions, since the alliance remains constant throughout a match.
+# This is dangerous if the alliance color switches for some reason.
+@cache
 def get_reef_pipe_translation(position: str):
     if position.upper() not in [chr(i) for i in range(ord('A'), ord('L') + 1)]:
         raise ValueError(f"Position out of range: {position}")
@@ -41,6 +44,7 @@ def get_reef_pipe_translation(position: str):
     return flip_alliance(translation)
 
 
+@cache
 def get_robot_scoring_pose(position: str):
     pipe_translation = get_reef_pipe_translation(position)
 
