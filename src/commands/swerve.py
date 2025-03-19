@@ -8,6 +8,7 @@ from pathplannerlib.trajectory import PathPlannerTrajectoryState
 from wpimath.geometry import Rotation2d, Pose2d
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
 
+import field
 from constants import DrivingConstants
 from swervepy import SwerveDrive, TrajectoryFollowerParameters
 
@@ -48,6 +49,29 @@ class DriveToPoseCommand(commands2.Command):
         self.controller = PPHolonomicDriveController(PIDConstants(parameters.xy_kP), PIDConstants(parameters.theta_kP))
 
     def initialize(self):
+        self.controller.reset(self.swerve.pose, self.swerve.robot_relative_speeds)
+
+    def execute(self):
+        output = self.controller.calculateRobotRelativeSpeeds(self.swerve.pose, self.target)
+        self.swerve.drive(output, DrivingConstants.OPEN_LOOP)
+
+    def end(self, interrupted: bool):
+        self.swerve.drive(ChassisSpeeds(), DrivingConstants.OPEN_LOOP)
+
+    def getRequirements(self) -> Set[Subsystem]:
+        return {self.swerve}
+
+
+class DriveToScoringPosition(commands2.Command):
+    def __init__(self, swerve: SwerveDrive, label: str, parameters: TrajectoryFollowerParameters):
+        super().__init__()
+        self.swerve = swerve
+        self.label = label
+        self.controller = PPHolonomicDriveController(PIDConstants(parameters.xy_kP), PIDConstants(parameters.theta_kP))
+
+    def initialize(self):
+        target_pose = field.get_robot_scoring_pose(self.label)
+        self.target = PathPlannerTrajectoryState(pose=target_pose)
         self.controller.reset(self.swerve.pose, self.swerve.robot_relative_speeds)
 
     def execute(self):

@@ -23,14 +23,11 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
-import constants
 import swerve_config
-from constants import ElevatorConstants, ClawConstants
-import oi
 from commands.superstructure import Superstructure
-from commands.swerve import SkiStopCommand, DriveToPoseCommand
+from commands.swerve import SkiStopCommand, DriveToPoseCommand, DriveToScoringPosition
 from constants import DrivingConstants, CoralArmConstants, ElevatorConstants, ClimberConstants, ClawConstants
-from oi import XboxDriver, XboxOperator, KeyboardScoringPositions, ArcadeScoringPositions
+from oi import XboxDriver, XboxOperator, KeyboardScoringPositions, ArcadeScoringPositions, PS4ScoringPositions
 from subsystems.coral_arm import CoralArm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
@@ -46,7 +43,7 @@ class RobotContainer:
 
         self.driver_joystick = XboxDriver(0)
         self.operator_joystick = XboxOperator(1)
-        self.button_board = ArcadeScoringPositions(2)
+        self.button_board = PS4ScoringPositions(2)
         self.sysid_joystick = CommandXboxController(3)
 
         self.auto_chooser = wpilib.SendableChooser()
@@ -261,6 +258,12 @@ class RobotContainer:
         self.operator_joystick.level_4.onTrue(self.level_4_command())  # Level 4 -- Y Button
 
         # Reef Positions
+        for position in [chr(i) for i in range(ord('a'), ord('l') + 1)]:
+            button: Trigger = getattr(self.button_board, f"reef_{position}")
+            button.whileTrue(
+                DriveToScoringPosition(self.swerve, position, AUTONOMOUS_PARAMS)
+            )
+        """
         for reef_label, coordinates in DrivingConstants.CORAL_LOCATIONS.items():
             # Get the Trigger object from the OI button board class by referencing its name
             # e.g, self.button_board.reef_a is referenced by "reef_a"
@@ -277,6 +280,7 @@ class RobotContainer:
                     commands2.PrintCommand(f"{reef_label} pressed!")
                     )
             )
+        """
 
         # Climber buttons
         self.operator_joystick.climber_up.whileTrue(self.climber.RaiseRobot())

@@ -1,5 +1,6 @@
 import math
-from wpimath.geometry import Rotation2d, Transform3d, Rotation3d
+
+from wpimath.geometry import Rotation2d, Transform3d, Rotation3d, Translation2d, Transform2d
 
 from swervepy import u
 
@@ -13,42 +14,13 @@ def construct_Transform3d_inches(x: float, y: float, z: float, rotation: Rotatio
     )
 
 
+def construct_Translation2d_inches(x: float, y: float) -> Translation2d:
+    return Translation2d(x * 0.0254, y * 0.0254)
+
+
 class DrivingConstants:
     OPEN_LOOP = False
     FIELD_RELATIVE = False
-
-    # Create Reef Constants (arrays/lists of floats)
-
-    # ALGAE LOCATIONS
-    ALGAE_LEFT_UPPER: list[float] = [3.801, 5.507, -33.621]  # [X, Y, HEADING]
-    ALGAE_RIGHT_UPPER: list[float] = [5.446, 5.391, 125.770]  # [X, Y, HEADING]
-
-    ALGAE_LEFT_CENTER: list[float] = [2.848, 4.189, -108.628] # [X, Y, HEADING]
-    ALGAE_RIGHT_CENTER: list[float] = [6.129, 3.842, 9.926] # [X, Y, HEADING]
-
-    ALGAE_LEFT_LOWER: list[float] = [3.531, 2.697, 32.276] # [X, Y, HEADING]
-    ALGAE_RIGHT_LOWER: list[float] = [5.109, 2.486, 43.568] # [X, Y, HEADING]
-
-    # CORAL LOCATIONS
-    CORAL_LOCATIONS = {
-        "REEF_A": (2.719, 4.200, 0),  # (X, Y, HEADING (ROTATION))
-        "REEF_B": (2.738, 3.864, 0),  # (X, Y, HEADING (ROTATION))
-        "REEF_C": (3.452, 2.605, 60),  # (X, Y, HEADING (ROTATION))
-        "REEF_D": (3.764, 2.422, 60),  # (X, Y, HEADING (ROTATION))
-        "REEF_E": (5.201, 2.420, 120),  # (X, Y, HEADING (ROTATION))
-        "REEF_F": (5.500, 2.585, 120),  # (X, Y, HEADING (ROTATION))
-        "REEF_G": (6.230, 3.857, 180),  # (X, Y, HEADING (ROTATION))
-        "REEF_H": (6.244, 4.198, 180),  # (X, Y, HEADING (ROTATION))
-        "REEF_I": (5.489, 5.474, -120),  # (X, Y, HEADING (ROTATION))
-        "REEF_J": (5.224, 5.624, -120),  # (X, Y, HEADING (ROTATION))
-        "REEF_K": (3.748, 5.627, -60),  # (X, Y, HEADING (ROTATION))
-        "REEF_L": (3.479, 5.464, -60),  # (X, Y, HEADING (ROTATION))
-        "STATION_RIGHT": (1.195, 1.008, -126), # (X, Y, HEADING (ROTATION))
-        "STATION_LEFT": (1.289, 7.065, 126), # (X, Y, HEADING (ROTATION))
-    }
-
-    # example usage(s): X,Y,HEADING = REEF_LEFT_CENTER
-    # Y = REEF_LEFT_CENTER[2]
 
 
 class ElevatorConstants:
@@ -140,3 +112,44 @@ class VisionConstants:
         "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5 + 1.75, Rotation3d.fromDegrees(0, 195, -90)),
     }
 
+
+class FieldConstants:
+    """All positions are measured from the right side of the blue alliance wall, as defined in the FIRST layout &
+    markings diagram. Unless otherwise specified, all measurements are in metres."""
+    FIELD_LENGTH = 17.548
+    FIELD_WIDTH = 8.052
+
+    REEF_CENTER_TRANSLATION = Translation2d(3.302 + (2.375/2), 2.655 + (2.742/2))
+    REEF_INSCRIBED_DIAMETER = 1.663  # The diameter of a circle inscribed inside the hexagon formed by the reef walls
+    REEF_PIPE_TO_PIPE_DISTANCE = 0.329
+
+    REEF_TRANSFORMATIONS = {
+        "REEF_A": (1, 0),
+        "REEF_B": (-1, 0),
+        "REEF_C": (1, 60),
+        "REEF_D": (-1, 60),
+        "REEF_E": (1, 120),
+        "REEF_F": (-1, 120),
+        "REEF_G": (1, 180),
+        "REEF_H": (-1, 180),
+        "REEF_I": (1, 240),
+        "REEF_J": (-1, 240),
+        "REEF_K": (1, 300),
+        "REEF_L": (-1, 300),
+    }
+
+    LEFT_CORAL_STATION_CENTER_TRANSLATION = construct_Translation2d_inches(33.51, 291.20)
+    LEFT_CORAL_STATION_ROTATION = Rotation2d.fromDegrees(306 - 180)
+
+    RIGHT_CORAL_STATION_CENTER_TRANSLATION = construct_Translation2d_inches(33.51, 25.80)
+    RIGHT_CORAL_STATION_ROTATION = Rotation2d.fromDegrees(180 + 54)
+
+    CORAL_STATION_GROOVE_TO_GROOVE_DISTANCE = 0.2032
+
+
+class RobotPhysicalConstants:
+    BUMPER_LENGTH = 1.054
+    BUMPER_WIDTH = 0.749
+
+    SCORING_MECHANISM_RELATIVE_TO_ROBOT_CENTER: Transform2d
+    SCORING_MECHANISM_RADIUS: float
