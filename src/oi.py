@@ -504,6 +504,68 @@ class ArcadeScoringPositions(ScoringPositionsActionSet):
         return self.stick.button(12)  # K12
 
 
+class PS4ScoringPositions(ScoringPositionsActionSet):
+    def __init__(self, port: int):
+        self.stick = CommandPS4Controller(port)
+
+    @property
+    def reef_i(self) -> Trigger:
+        return self.stick.L1()
+
+    @property
+    def reef_c(self) -> Trigger:
+        return self.stick.povDown()
+
+    @property
+    def reef_d(self) -> Trigger:
+        return self.stick.povRight()
+
+    @property
+    def reef_e(self) -> Trigger:
+        return self.stick.triangle()
+
+    @property
+    def reef_f(self) -> Trigger:
+        return self.stick.square()
+
+    @property
+    def reef_g(self) -> Trigger:
+        return self.stick.cross()
+
+    @property
+    def reef_h(self) -> Trigger:
+        return self.stick.circle()
+
+    @property
+    def reef_j(self) -> Trigger:
+         return self.stick.L2()
+
+    @property
+    def reef_k(self) -> Trigger:
+        return self.stick.R1()
+
+    @property
+    def reef_l(self) -> Trigger:
+        return self.stick.R2()
+
+    @property
+    def reef_a(self) -> Trigger:
+        return self.stick.povUp()
+
+    @property
+    def reef_b(self) -> Trigger:
+        return self.stick.povLeft()
+
+    @property
+    def station_left(self) -> Trigger:
+        return self.stick.L3()
+
+    @property
+    def station_right(self) -> Trigger:
+        return self.stick.R3()
+
+
+
 def deadband(value, band):
     return value if abs(value) > band else 0
 
