@@ -105,6 +105,9 @@ class RobotContainer:
         # Button bindings must be configured after every subsystem has been set up
         self.configure_button_bindings()
 
+        # Setup automatic scoring
+        Trigger(self.superstructure.ready_to_score).whileTrue(self.claw.OuttakeCommand())
+
     def get_autonomous_command(self) -> Command:
         return self.auto_chooser.getSelected()
 

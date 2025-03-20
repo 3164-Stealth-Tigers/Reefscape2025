@@ -30,7 +30,7 @@ class DrivingConstants:
     MAXIMUM_ANGULAR_VELOCITY_ERROR = 1  # degrees/sec
 
     REEF_WALL_TO_BUMPER_DISTANCE = (7 * u.inch).m_as(u.m)
-    CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (10 * u.inch).m_as(u.m)
+    CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (8 * u.inch).m_as(u.m)
 
 
 class ElevatorConstants:
@@ -56,7 +56,7 @@ class ElevatorConstants:
     MAXIMUM_CARRIAGE_HEIGHT = (80 * u.inch).m_as(u.m)  #0.560820
     LIMIT_SWITCH_HEIGHT = 0
 
-    LEVEL_0_HEIGHT = (31 * u.inch).m_as(u.m)
+    LEVEL_0_HEIGHT = (30.5 * u.inch).m_as(u.m)
     LEVEL_1_HEIGHT = (31 * u.inch).m_as(u.m)
     LEVEL_2_HEIGHT = (31.25 * u.inch).m_as(u.m)
     LEVEL_3_HEIGHT = (46.75 * u.inch).m_as(u.m)
