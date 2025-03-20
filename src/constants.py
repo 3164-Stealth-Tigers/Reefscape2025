@@ -22,14 +22,14 @@ class DrivingConstants:
     OPEN_LOOP = False
     FIELD_RELATIVE = True
 
-    CLOSE_RADIUS = 1.5
+    CLOSE_RADIUS = (3 * u.ft).m_as(u.m)
 
     MAXIMUM_POSITION_ERROR = 0.03
     MAXIMUM_VELOCITY_ERROR = 0.03
     MAXIMUM_ANGULAR_POSITION_ERROR = 1  # degrees
     MAXIMUM_ANGULAR_VELOCITY_ERROR = 1  # degrees/sec
 
-    REEF_WALL_TO_BUMPER_DISTANCE = (12 * u.inch).m_as(u.m)
+    REEF_WALL_TO_BUMPER_DISTANCE = (7.75 * u.inch).m_as(u.m)
     CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (10 * u.inch).m_as(u.m)
 
 
@@ -40,9 +40,9 @@ class ElevatorConstants:
     INVERT_RIGHT_MOTOR = False
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
-    kP = 13 #4
+    kP = 4
     kD = 0
-    MAX_OUT_UP = 0.35
+    MAX_OUT_UP = 1 #0.35
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0
@@ -56,10 +56,10 @@ class ElevatorConstants:
     MAXIMUM_CARRIAGE_HEIGHT = (80 * u.inch).m_as(u.m)  #0.560820
     LIMIT_SWITCH_HEIGHT = 0
 
-    LEVEL_0_HEIGHT = (35 * u.inch).m_as(u.m)
-    LEVEL_1_HEIGHT = (30.5 * u.inch).m_as(u.m)
-    LEVEL_2_HEIGHT = (28.5 * u.inch).m_as(u.m)
-    LEVEL_3_HEIGHT = (44.5 * u.inch).m_as(u.m)
+    LEVEL_0_HEIGHT = (31 * u.inch).m_as(u.m)
+    LEVEL_1_HEIGHT = (31 * u.inch).m_as(u.m)
+    LEVEL_2_HEIGHT = (31.25 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (47.25 * u.inch).m_as(u.m)
     LEVEL_4_HEIGHT = (78.5 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
@@ -120,11 +120,17 @@ class ClimberConstants:
 class VisionConstants:
     CAMERAS = {
         # Front-left swerve
-        # "Arducam_OV9782_USB_Camera": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
-        #                                                           .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
-        "FrontTagCamera": construct_Transform3d_inches(9.5, 9, 7 + 1.75, Rotation3d.fromDegrees(0, 0, 0)),
-        "BackTagCamera": construct_Transform3d_inches(8.5, -9, 22 + 1.75, Rotation3d.fromDegrees(0, 0,180)),
-        "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5 + 1.75, Rotation3d.fromDegrees(0, 0, -90)
+        "FLSwerveCam": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
+                                                    .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
+        # Front-right swerve
+        "FRSwerveCam": construct_Transform3d_inches(13.375, -9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
+                                                    .rotateBy(Rotation3d.fromDegrees(0, 0, -30))),
+        # Front-facing camera
+        "FrontTagCamera": construct_Transform3d_inches(9.048, 9.65, 11.25, Rotation3d.fromDegrees(0, 0, 0)),
+        # Back-facing camera
+        "BackTagCamera": construct_Transform3d_inches(7.952, -9.65, 25.25, Rotation3d.fromDegrees(0, 0,180)),
+        # Right-facing camera, tilted 15 degrees ups
+        "SideTagCamera": construct_Transform3d_inches(8.5, -9.508, 8.669, Rotation3d.fromDegrees(0, 0, -90)
                                                       .rotateBy(Rotation3d.fromDegrees(0, 15, 0))),
     }
 
@@ -172,5 +178,5 @@ class RobotPhysicalConstants:
 
     ROBOT_RADIUS = BUMPER_LENGTH / 2
 
-    SCORING_MECHANISM_RELATIVE_TO_ROBOT_CENTER: Transform2d
+    SCORING_MECHANISM_Y_DISTANCE_TO_ROBOT_CENTER = (-(0.5 + 0.25) * u.inch).m_as(u.m)
     SCORING_MECHANISM_RADIUS: float

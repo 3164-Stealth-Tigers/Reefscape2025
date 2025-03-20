@@ -11,8 +11,6 @@ class Robot(commands2.TimedCommandRobot):
         # Start recording NetworkTables to data log
         DataLogManager.start()
 
-        CameraServer.launch()
-
         self.container = RobotContainer()
         self.scheduler = commands2.CommandScheduler.getInstance()
         self.autonomous_command: Optional[commands2.Command] = None

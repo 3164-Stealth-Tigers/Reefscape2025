@@ -5,7 +5,7 @@ from typing_extensions import Optional
 from wpimath.geometry import Rotation2d, Pose2d
 
 from constants import CoralArmConstants, ElevatorConstants, DrivingConstants, FieldConstants, RobotPhysicalConstants
-from field import get_robot_scoring_pose, will_collide, flip_alliance
+from subsystems.auto_align import AutoAlign
 from subsystems.coral_arm import CoralArm
 from subsystems.climber import Climber
 from subsystems.elevator import Elevator
@@ -19,14 +19,9 @@ class Superstructure:
         self.coral_arm = coral_arm
         self.climber = climber
 
-    def ready_for_close(self, position: str) -> bool:
-        """Is the robot close enough to its scoring position for close actions (e.g., raising the elevator)?"""
-        scoring_pose = get_robot_scoring_pose(position)
-        return scoring_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.CLOSE_RADIUS
-
     def ready_to_score(self, position: str) -> bool:
         """Is the robot ready to release a CORAL and score?"""
-        scoring_pose = get_robot_scoring_pose(position)
+        scoring_pose = AutoAlign.get_robot_scoring_pose(position)
         return (
             # Robot is at the scoring position
             scoring_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.MAXIMUM_POSITION_ERROR and
@@ -40,11 +35,6 @@ class Superstructure:
             # Arm has reached scoring rotation
             self.coral_arm.at_goal_rotation()
         )
-
-    def will_collide_with_reef(self, goal: Pose2d):
-        return will_collide(self.swerve.pose.translation(), goal.translation(),
-                            flip_alliance(FieldConstants.REEF_CENTER_TRANSLATION),
-                            RobotPhysicalConstants.ROBOT_RADIUS, FieldConstants.REEF_HITBOX_RADIUS)
 
     def SetEndEffectorHeight(self, end_effector_height: float, angle: Optional[Rotation2d] = None):
         """

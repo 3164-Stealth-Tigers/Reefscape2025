@@ -24,9 +24,10 @@ from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d, Transform2d, Translation2d
 
 import swerve_config
-from field import flip_alliance, get_robot_intake_pose, CoralStation
+from field import flip_alliance, CoralStation
+from subsystems.auto_align import AutoAlign, DriveToScoringPosition
 from subsystems.superstructure import Superstructure
-from commands.swerve import SkiStopCommand, DriveToScoringPosition, DriveToPoseCommand, DriveDistanceCommand
+from commands.swerve import SkiStopCommand, DriveToPoseCommand, DriveDistanceCommand
 from constants import DrivingConstants, CoralArmConstants, ElevatorConstants, FieldConstants, RobotPhysicalConstants
 from oi import XboxDriver, XboxOperator, PS4ScoringPositions, ArcadeScoringPositions
 from subsystems.coral_arm import CoralArm
@@ -79,12 +80,6 @@ class RobotContainer:
 
         # Configure arm subsystem
         self.coral_arm = CoralArm()
-        self.coral_arm.setDefaultCommand(
-            commands2.RunCommand(
-                lambda: self.coral_arm.set_duty_cycle(self.operator_joystick.coral_arm()),
-                self.coral_arm,
-            )
-        )
         SmartDashboard.putData("Coral Arm", self.coral_arm)
 
         # Configure climber subsystem
@@ -96,6 +91,8 @@ class RobotContainer:
 
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.swerve, self.elevator, self.coral_arm, self.climber)
+
+        self.aa = AutoAlign(self.swerve)
 
         self.build_forward_auto()
         self.build_autos_speed1()
@@ -285,9 +282,9 @@ class RobotContainer:
         # Elevator height buttons
         self.operator_joystick.loading_level.onTrue(self.level_0_command())  # Loader Height -- Right Trigger
         self.operator_joystick.level_1.onTrue(self.level_1_command())  # Level 1 -- A Button
-        self.operator_joystick.level_2.onTrue(self.level_2_command())  # Level 2 -- X Button
-        self.operator_joystick.level_3.onTrue(self.level_3_command())  # Level 3 -- B Button
-        self.operator_joystick.level_4.onTrue(self.level_4_command())  # Level 4 -- Y Button
+        self.operator_joystick.level_2.onTrue(self.aa.close_command(self.level_2_command()))  # Level 2 -- X Button
+        self.operator_joystick.level_3.onTrue(self.aa.close_command(self.level_3_command()))  # Level 3 -- B Button
+        self.operator_joystick.level_4.onTrue(self.aa.close_command(self.level_4_command()))  # Level 4 -- Y Button
 
         self.operator_joystick.home_elevator.whileTrue(self.elevator.HomeElevatorWithHardLimit())
 
@@ -295,7 +292,7 @@ class RobotContainer:
         for position in [chr(i) for i in range(ord('a'), ord('l') + 1)]:
             button: Trigger = getattr(self.button_board, f"reef_{position}")
             button.whileTrue(
-                DriveToScoringPosition(self.swerve, position, AUTONOMOUS_PARAMS)
+                DriveToScoringPosition(self.aa, position, AUTONOMOUS_PARAMS)
             )
         """
         for reef_label, coordinates in DrivingConstants.CORAL_LOCATIONS.items():
@@ -319,13 +316,13 @@ class RobotContainer:
         # Coral Station Positions
         self.button_board.station_left.whileTrue(
             commands2.DeferredCommand(
-                lambda: DriveToPoseCommand(self.swerve, get_robot_intake_pose(CoralStation.LEFT), AUTONOMOUS_PARAMS),
+                lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT), AUTONOMOUS_PARAMS),
                 self.swerve,
             )
         )
         self.button_board.station_right.whileTrue(
             commands2.DeferredCommand(
-                lambda: DriveToPoseCommand(self.swerve, get_robot_intake_pose(CoralStation.RIGHT), AUTONOMOUS_PARAMS),
+                lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.RIGHT), AUTONOMOUS_PARAMS),
                 self.swerve,
             )
         )
@@ -353,12 +350,12 @@ class RobotContainer:
 
 
     def level_0_command(self):
-        return self.elevator.SetHeightCommand(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT).alongWith(
+        return self.elevator.SetHeightCommand(ElevatorConstants.LEVEL_0_HEIGHT).alongWith(
             self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_0_ROTATION)
         )
 
     def level_1_command(self):
-        return self.elevator.SetHeightCommand(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT).alongWith(
+        return self.elevator.SetHeightCommand(ElevatorConstants.LEVEL_1_HEIGHT).alongWith(
             self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_1_ROTATION)
         )
 
