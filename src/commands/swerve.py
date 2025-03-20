@@ -5,7 +5,7 @@ from commands2 import Subsystem
 from pathplannerlib.config import PIDConstants
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.trajectory import PathPlannerTrajectoryState
-from wpimath.geometry import Rotation2d, Pose2d
+from wpimath.geometry import Rotation2d, Pose2d, Translation2d
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
 
 import field
@@ -80,6 +80,38 @@ class DriveToScoringPosition(commands2.Command):
 
     def end(self, interrupted: bool):
         self.swerve.drive(ChassisSpeeds(), DrivingConstants.OPEN_LOOP)
+
+    def getRequirements(self) -> Set[Subsystem]:
+        return {self.swerve}
+
+
+class DriveDistanceCommand(commands2.Command):
+    def __init__(self, swerve: SwerveDrive, x_speed: float, y_speed: float, distance: float):
+        """
+        Drive the robot in a straight line for a specified distance.
+
+        :param swerve: The swerve drive subsystem.
+        :param x_speed: The speed (in meters/sec) to move in the x-direction across the field. A positive number will move toward the Red Driver Station, and a negative number will move toward the Blue Driver Station.
+        :param y_speed: The speed (in meters/sec) to move in the y-direction. A positive number will move up the field, and a negative number will move down the field.
+        :param distance: The straight-line distance (in meters) to drive. This number should be positive.
+        """
+
+        super().__init__()
+        self.swerve = swerve
+        self.speeds = Translation2d(x_speed, y_speed)
+        self.distance = distance
+
+    def initialize(self):
+        self.initial_translation = self.swerve.pose.translation()
+
+    def execute(self):
+        self.swerve.drive(self.speeds, 0, False, False)
+
+    def end(self, interrupted: bool):
+        self.swerve.drive(Translation2d(0, 0), 0, False, False)
+
+    def isFinished(self) -> bool:
+        return self.swerve.pose.translation().distance(self.initial_translation) >= self.distance
 
     def getRequirements(self) -> Set[Subsystem]:
         return {self.swerve}

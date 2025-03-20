@@ -20,7 +20,7 @@ def construct_Translation2d_inches(x: float, y: float) -> Translation2d:
 
 class DrivingConstants:
     OPEN_LOOP = False
-    FIELD_RELATIVE = False
+    FIELD_RELATIVE = True
 
     CLOSE_RADIUS = 1.5
 
@@ -40,7 +40,9 @@ class ElevatorConstants:
     INVERT_RIGHT_MOTOR = False
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
-    kP = 13
+    kP = 13 #4
+    kD = 0
+    MAX_OUT_UP = 0.35
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0
@@ -56,9 +58,9 @@ class ElevatorConstants:
 
     LEVEL_0_HEIGHT = (35 * u.inch).m_as(u.m)
     LEVEL_1_HEIGHT = (30.5 * u.inch).m_as(u.m)
-    LEVEL_2_HEIGHT = (31 * u.inch).m_as(u.m)
-    LEVEL_3_HEIGHT = (46.5 * u.inch).m_as(u.m)
-    LEVEL_4_HEIGHT = (80 * u.inch).m_as(u.m)
+    LEVEL_2_HEIGHT = (28.5 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (44.5 * u.inch).m_as(u.m)
+    LEVEL_4_HEIGHT = (78.5 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
 
@@ -93,7 +95,7 @@ class CoralArmConstants:
     LEVEL_1_ROTATION = Rotation2d.fromDegrees(-37)
     LEVEL_2_ROTATION = Rotation2d.fromDegrees(-35)
     LEVEL_3_ROTATION = Rotation2d.fromDegrees(-35)
-    LEVEL_4_ROTATION = Rotation2d.fromDegrees(-40)
+    LEVEL_4_ROTATION = Rotation2d.fromDegrees(-35)
 
     ARM_TOLERANCE = Rotation2d.fromDegrees(2)
 
@@ -104,8 +106,8 @@ class AlgaeArmConstants:
 
     GEAR_RATIO = 100
 
-    STOWED_ANGLE = Rotation2d(-90)
-    EXTENDED_ANGLE = Rotation2d()
+    STOWED_ANGLE = Rotation2d.fromDegrees(111.35)
+    EXTENDED_ANGLE = Rotation2d.fromDegrees(5)
 
 
 class ClimberConstants:

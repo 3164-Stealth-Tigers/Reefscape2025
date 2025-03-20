@@ -44,14 +44,15 @@ class RobotContainer:
 
         self.driver_joystick = XboxDriver(0)
         self.operator_joystick = XboxOperator(1)
-        self.button_board = PS4ScoringPositions(2)
-        self.sysid_joystick = CommandXboxController(3)
+        self.button_board = ArcadeScoringPositions(2)
+        #  self.sysid_joystick = CommandXboxController(3)
 
         self.auto_chooser = wpilib.SendableChooser()
         wpilib.SmartDashboard.putData(self.auto_chooser)
 
         self.vision = Vision()
 
+        self.speed_exponent = 2
         # Configure drivetrain
         self.swerve = SwerveDrive(
             SWERVE_MODULES,
@@ -62,22 +63,18 @@ class RobotContainer:
             self.vision.get_pose_estimation,
         )
         self.teleop_drive_command = self.swerve.teleop_command(
-            self.driver_joystick.forward,
-            self.driver_joystick.strafe,
-            self.driver_joystick.turn,
+            lambda: (abs(self.driver_joystick.forward()) ** self.speed_exponent) * sgn(self.driver_joystick.forward()),
+            lambda: (abs(self.driver_joystick.strafe()) ** self.speed_exponent) * sgn(self.driver_joystick.strafe()),
+            lambda: (abs(self.driver_joystick.turn()) ** self.speed_exponent) * sgn(self.driver_joystick.turn()),
             DrivingConstants.FIELD_RELATIVE,
             DrivingConstants.OPEN_LOOP,
         )
         self.swerve.setDefaultCommand(self.teleop_drive_command)
+        self.swerve.zero_heading(180)
+        SmartDashboard.putData("TeleOp Command", self.teleop_drive_command)
 
         # Configure elevator subsystem
         self.elevator = Elevator()
-        self.elevator.setDefaultCommand(
-            commands2.RunCommand(
-                lambda: self.elevator.set_voltage(0.96 + self.operator_joystick.elevator() * 6),
-                self.elevator,
-            )
-        )
         SmartDashboard.putData("Elevator", self.elevator)
 
         # Configure arm subsystem
@@ -94,12 +91,15 @@ class RobotContainer:
         self.climber = Climber()
 
         self.claw = Claw()
+        self.claw.setDefaultCommand(self.claw.IntakeCommand())
         SmartDashboard.putData("Claw", self.claw)
 
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.swerve, self.elevator, self.coral_arm, self.climber)
 
+        self.build_forward_auto()
         self.build_autos_speed1()
+        self.build_rp_auto()
         #self.build_autos_speed2()
 
         # Register Named Commands for PathPlanner after initializing subsystems but before the rest of init
@@ -112,6 +112,33 @@ class RobotContainer:
         return self.auto_chooser.getSelected()
 
     ### Build autonomous routines ###
+
+
+    def build_forward_auto(self):
+        auto = commands2.RunCommand(lambda: self.swerve.drive(Translation2d(1.5, 0), 0, False, False), self.swerve).andThen(
+            commands2.RunCommand(lambda: self.swerve.drive(Translation2d(), 0, False, False), self.swerve)
+        ).withTimeout(2)
+        self.auto_chooser.setDefaultOption("Drive Forward", auto)
+
+
+    def build_rp_auto(self):
+        auto = commands2.SequentialCommandGroup(
+            commands2.ParallelCommandGroup(
+                DriveDistanceCommand(self.swerve, 0.7, 0, 7.658-6.137),
+            ),
+            self.level_4_command(),
+            self.claw.OuttakeCommand().withTimeout(2),
+            commands2.ParallelDeadlineGroup(
+                commands2.ParallelCommandGroup(
+                    DriveDistanceCommand(self.swerve, -0.7, 0, 0.127),
+                    self.level_2_command(),
+                ),
+                self.claw.OuttakeCommand(),
+            )
+
+        )
+        auto.addRequirements(self.swerve)
+        self.auto_chooser.addOption("RP", auto)
 
 
     def build_autos_speed1(self):
@@ -133,13 +160,13 @@ class RobotContainer:
             ),
 
             # Set height/rotation to level 4 height/rotation
-            self.level_4_command(),
+            # self.level_4_command(),
 
             # Place it
-            # self.claw.OuttakeCommand(),
+            self.claw.OuttakeCommand().withTimeout(1),
 
             # Drop elevator to half-height before moving
-            self.level_2_command(),
+            #self.level_2_command(),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
@@ -148,7 +175,7 @@ class RobotContainer:
             ),
 
             # Accept new piece
-            # self.claw.IntakeCommand(),
+            self.claw.IntakeCommand().withTimeout(2),
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
             commands2.ParallelCommandGroup(
@@ -156,28 +183,28 @@ class RobotContainer:
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
             ),
 
-            self.level_4_command(),
+            #self.level_4_command(),
 
-            # self.claw.OuttakeCommand(),  # Deposit coral
+            self.claw.OuttakeCommand().withTimeout(1),  # Deposit coral
 
-            self.level_2_command(),
+           # self.level_2_command(),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
                 self.level_0_command(),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
             ),
-            # self.claw.IntakeCommand(),  # Receive coral
+            self.claw.IntakeCommand().withTimeout(2),  # Receive coral
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
             commands2.ParallelCommandGroup(
                 self.level_2_command(),
                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
             ),
-            self.level_4_command()
+            #self.level_4_command()
 
 
-            # self.claw.OuttakeCommand(),  # Deposit coral
+            self.claw.OuttakeCommand().withTimeout(1),  # Deposit coral
 
             # self.level_2_command()
 
@@ -185,7 +212,7 @@ class RobotContainer:
 
 
         )
-        self.auto_chooser.setDefaultOption("Speed 1", speed_1)
+        self.auto_chooser.addOption("Speed 1", speed_1)
 
     def build_autos_speed2(self):
         first_path_speed2 = PathPlannerPath.fromPathFile("start to br")
@@ -247,10 +274,13 @@ class RobotContainer:
         self.driver_joystick.reset_gyro.onTrue(InstantCommand(self.swerve.zero_heading))
         self.driver_joystick.toggle_field_relative.onTrue(InstantCommand(self.teleop_drive_command.toggle_field_relative))
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
+        self.driver_joystick.toggle_speed.onTrue(
+            commands2.InstantCommand(lambda: setattr(self, "speed_exponent", 2 if self.speed_exponent == 1 else 1))
+        )
 
         # Intake/outtake buttons
-        self.operator_joystick.stick.leftTrigger().whileTrue(self.claw.IntakeCommand())
-        self.operator_joystick.stick.leftBumper().whileTrue(self.claw.OuttakeCommand())
+        self.operator_joystick.intake.whileTrue(self.claw.IntakeCommand())
+        self.operator_joystick.outtake.whileTrue(self.claw.OuttakeCommand())
 
         # Elevator height buttons
         self.operator_joystick.loading_level.onTrue(self.level_0_command())  # Loader Height -- Right Trigger
@@ -258,6 +288,8 @@ class RobotContainer:
         self.operator_joystick.level_2.onTrue(self.level_2_command())  # Level 2 -- X Button
         self.operator_joystick.level_3.onTrue(self.level_3_command())  # Level 3 -- B Button
         self.operator_joystick.level_4.onTrue(self.level_4_command())  # Level 4 -- Y Button
+
+        self.operator_joystick.home_elevator.whileTrue(self.elevator.HomeElevatorWithHardLimit())
 
         # Reef Positions
         for position in [chr(i) for i in range(ord('a'), ord('l') + 1)]:
@@ -303,6 +335,7 @@ class RobotContainer:
         self.operator_joystick.climber_down.whileTrue(self.climber.LowerRobot())
 
         # SysId routines for swerve
+        """
         self.sysid_joystick.y().whileTrue(self.swerve.sys_id_quasistatic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.a().whileTrue(self.swerve.sys_id_quasistatic(SysIdRoutine.Direction.kReverse))
         self.sysid_joystick.b().whileTrue(self.swerve.sys_id_dynamic(SysIdRoutine.Direction.kForward))
@@ -313,6 +346,7 @@ class RobotContainer:
         self.sysid_joystick.povDown().whileTrue(self.coral_arm.SysIdQuasistatic(SysIdRoutine.Direction.kReverse))
         self.sysid_joystick.povRight().whileTrue(self.coral_arm.SysIdDynamic(SysIdRoutine.Direction.kForward))
         self.sysid_joystick.povLeft().whileTrue(self.coral_arm.SysIdDynamic(SysIdRoutine.Direction.kReverse))
+        """
 
 
     ### Setup re-used commands ###
@@ -345,3 +379,6 @@ class RobotContainer:
 
 def construct_Pose2d(x: float, y: float, degrees: float) -> Pose2d:
     return Pose2d(x, y, Rotation2d.fromDegrees(degrees))
+
+def sgn(x):
+    return 1 if x > 0 else -1

@@ -1,7 +1,7 @@
 from typing import Optional
 
 import commands2
-from wpilib import DataLogManager
+from wpilib import DataLogManager, CameraServer
 
 from container import RobotContainer
 
@@ -10,6 +10,8 @@ class Robot(commands2.TimedCommandRobot):
     def robotInit(self):
         # Start recording NetworkTables to data log
         DataLogManager.start()
+
+        CameraServer.launch()
 
         self.container = RobotContainer()
         self.scheduler = commands2.CommandScheduler.getInstance()
