@@ -194,7 +194,11 @@ class Elevator(commands2.Subsystem):
             .velocity(self.encoder.getVelocity())
 
     def h_error(self):
-        return self.desired_height - self.carriage_height()
+        if self.goal_height is not None:
+            error = self.goal_height - self.carriage_height()
+        else:
+            error = 0
+        return error
 
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
@@ -202,7 +206,7 @@ class Elevator(commands2.Subsystem):
         builder.addDoubleProperty("Applied Voltage", lambda: self.leader.getAppliedOutput() * self.leader.getBusVoltage(), lambda _: None)
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
         builder.addDoubleProperty("hError", self.h_error, lambda _: None)
-        builder.addDoubleProperty("Goal Height", lambda: self.goal_height, lambda _: None)
+        builder.addDoubleProperty("Goal Height", lambda: self.goal_height if self.goal_height is not None else 0, lambda _: None)
 
     def current_command_name(self) -> str:
         try:
