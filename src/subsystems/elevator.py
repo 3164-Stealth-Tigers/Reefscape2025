@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import commands2
 import rev
@@ -12,7 +13,7 @@ from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
 from constants import ElevatorConstants, CoralArmConstants
-from sim_helper import SimHelper
+from helpers import SimHelper
 
 
 class Elevator(commands2.Subsystem):
@@ -74,7 +75,11 @@ class Elevator(commands2.Subsystem):
 
         wpilib.SmartDashboard.putData("Elevator Mechanism", mech)
 
+        # Goal height that the elevator will try to reach
+        self.goal_height: Optional[float] = None
+
     def periodic(self) -> None:
+        # Update SmartDashboard visualization
         self.elevator.setLength(self.carriage_height())
 
     def simulationPeriodic(self) -> None:
@@ -144,12 +149,10 @@ class Elevator(commands2.Subsystem):
         self.encoder.setPosition(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
 
     def set_height(self, height: float):
-        ff = self.feedforward.calculate(self.encoder.getVelocity())
+        self.goal_height = height
         self.controller.setReference(
             height,
             rev.SparkBase.ControlType.kPosition,  # rev.SparkBase.ControlType.kMAXMotionPositionControl
-            arbFeedforward=ff,
-            arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
         )
 
     def set_duty_cycle(self, output: float):
@@ -178,10 +181,11 @@ class Elevator(commands2.Subsystem):
         # Hall Effect sensor returns False when magnet is detected.
         return not self.limit_switch.get()
 
-    def at_height(self, goal_height: float) -> bool:
-        return goal_height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < goal_height + ElevatorConstants.HEIGHT_TOLERANCE
+    def at_height(self, height: float) -> bool:
+        return height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < height + ElevatorConstants.HEIGHT_TOLERANCE
 
-
+    def at_goal_height(self) -> bool:
+        return self.at_height(self.goal_height) if self.goal_height is not None else False
 
     def sysId_log(self, log: SysIdRoutineLog):
         log.motor("elevator") \
@@ -229,4 +233,4 @@ class Elevator(commands2.Subsystem):
 
     def SetHeightCommand(self, height: float):
         return commands2.RunCommand(lambda: self.set_height(height), self) \
-            .until(lambda: self.at_height(height))
+            .until(self.at_goal_height)

@@ -15,19 +15,20 @@ Distance from front of robot frame to REEF when scoring L2-4: 11.75 inch
 """
 import commands2
 import wpilib
-from commands2 import Command, InstantCommand, RunCommand
+from commands2 import Command, InstantCommand
 from commands2.button import CommandXboxController, Trigger
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder
-from pathplannerlib.path import PathPlannerPath, PathConstraints
+from pathplannerlib.path import PathPlannerPath
 from wpilib import DriverStation, SmartDashboard
-from wpimath.geometry import Rotation2d, Pose2d
+from wpimath.geometry import Rotation2d, Pose2d, Transform2d
 
 import swerve_config
-from commands.superstructure import Superstructure
-from commands.swerve import SkiStopCommand, DriveToPoseCommand, DriveToScoringPosition
-from constants import DrivingConstants, CoralArmConstants, ElevatorConstants, ClimberConstants, ClawConstants
-from oi import XboxDriver, XboxOperator, KeyboardScoringPositions, ArcadeScoringPositions, PS4ScoringPositions
+from field import flip_alliance, get_robot_intake_pose, CoralStation
+from subsystems.superstructure import Superstructure
+from commands.swerve import SkiStopCommand, DriveToScoringPosition, DriveToPoseCommand
+from constants import DrivingConstants, CoralArmConstants, ElevatorConstants, FieldConstants, RobotPhysicalConstants
+from oi import XboxDriver, XboxOperator, PS4ScoringPositions
 from subsystems.coral_arm import CoralArm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
@@ -49,15 +50,16 @@ class RobotContainer:
         self.auto_chooser = wpilib.SendableChooser()
         wpilib.SmartDashboard.putData(self.auto_chooser)
 
-        camera_system = Vision()
+        self.vision = Vision()
 
         # Configure drivetrain
         self.swerve = SwerveDrive(
             SWERVE_MODULES,
-            GYRO, MAX_VELOCITY,
+            GYRO,
+            MAX_VELOCITY,
             MAX_ANGULAR_VELOCITY,
             AUTONOMOUS_PARAMS,
-            camera_system.get_pose_estimation,
+            self.vision.get_pose_estimation,
         )
         self.teleop_drive_command = self.swerve.teleop_command(
             self.driver_joystick.forward,
@@ -95,7 +97,7 @@ class RobotContainer:
         SmartDashboard.putData("Claw", self.claw)
 
         # The superstructure contains commands that require multiple subsystems
-        self.superstructure = Superstructure(self.elevator, self.coral_arm, self.climber)
+        self.superstructure = Superstructure(self.swerve, self.elevator, self.coral_arm, self.climber)
 
         self.build_autos_speed1()
         #self.build_autos_speed2()
@@ -281,6 +283,20 @@ class RobotContainer:
                     )
             )
         """
+
+        # Coral Station Positions
+        self.button_board.station_left.whileTrue(
+            commands2.DeferredCommand(
+                lambda: DriveToPoseCommand(self.swerve, get_robot_intake_pose(CoralStation.LEFT), AUTONOMOUS_PARAMS),
+                self.swerve,
+            )
+        )
+        self.button_board.station_right.whileTrue(
+            commands2.DeferredCommand(
+                lambda: DriveToPoseCommand(self.swerve, get_robot_intake_pose(CoralStation.RIGHT), AUTONOMOUS_PARAMS),
+                self.swerve,
+            )
+        )
 
         # Climber buttons
         self.operator_joystick.climber_up.whileTrue(self.climber.RaiseRobot())

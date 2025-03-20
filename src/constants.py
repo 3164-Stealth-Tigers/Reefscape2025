@@ -1,6 +1,6 @@
 import math
 
-from wpimath.geometry import Rotation2d, Transform3d, Rotation3d, Translation2d, Transform2d
+from wpimath.geometry import Rotation2d, Transform3d, Rotation3d, Translation2d, Transform2d, Pose2d
 
 from swervepy import u
 
@@ -21,6 +21,16 @@ def construct_Translation2d_inches(x: float, y: float) -> Translation2d:
 class DrivingConstants:
     OPEN_LOOP = False
     FIELD_RELATIVE = False
+
+    CLOSE_RADIUS = 1.5
+
+    MAXIMUM_POSITION_ERROR = 0.03
+    MAXIMUM_VELOCITY_ERROR = 0.03
+    MAXIMUM_ANGULAR_POSITION_ERROR = 1  # degrees
+    MAXIMUM_ANGULAR_VELOCITY_ERROR = 1  # degrees/sec
+
+    REEF_WALL_TO_BUMPER_DISTANCE = (12 * u.inch).m_as(u.m)
+    CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (10 * u.inch).m_as(u.m)
 
 
 class ElevatorConstants:
@@ -107,9 +117,13 @@ class ClimberConstants:
 
 class VisionConstants:
     CAMERAS = {
+        # Front-left swerve
+        # "Arducam_OV9782_USB_Camera": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
+        #                                                           .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
         "FrontTagCamera": construct_Transform3d_inches(9.5, 9, 7 + 1.75, Rotation3d.fromDegrees(0, 0, 0)),
         "BackTagCamera": construct_Transform3d_inches(8.5, -9, 22 + 1.75, Rotation3d.fromDegrees(0, 0,180)),
-        "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5 + 1.75, Rotation3d.fromDegrees(0, 195, -90)),
+        "SideTagCamera": construct_Transform3d_inches(8.5, -9.5,5 + 1.75, Rotation3d.fromDegrees(0, 0, -90)
+                                                      .rotateBy(Rotation3d.fromDegrees(0, 15, 0))),
     }
 
 
@@ -122,6 +136,7 @@ class FieldConstants:
     REEF_CENTER_TRANSLATION = Translation2d(3.302 + (2.375/2), 2.655 + (2.742/2))
     REEF_INSCRIBED_DIAMETER = 1.663  # The diameter of a circle inscribed inside the hexagon formed by the reef walls
     REEF_PIPE_TO_PIPE_DISTANCE = 0.329
+    REEF_HITBOX_RADIUS = 0.960
 
     REEF_TRANSFORMATIONS = {
         "REEF_A": (1, 0),
@@ -140,9 +155,11 @@ class FieldConstants:
 
     LEFT_CORAL_STATION_CENTER_TRANSLATION = construct_Translation2d_inches(33.51, 291.20)
     LEFT_CORAL_STATION_ROTATION = Rotation2d.fromDegrees(306 - 180)
+    LEFT_CORAL_STATION_CENTER_POSE = Pose2d(LEFT_CORAL_STATION_CENTER_TRANSLATION, LEFT_CORAL_STATION_ROTATION)
 
     RIGHT_CORAL_STATION_CENTER_TRANSLATION = construct_Translation2d_inches(33.51, 25.80)
     RIGHT_CORAL_STATION_ROTATION = Rotation2d.fromDegrees(180 + 54)
+    RIGHT_CORAL_STATION_CENTER_POSE = Pose2d(RIGHT_CORAL_STATION_CENTER_TRANSLATION, RIGHT_CORAL_STATION_ROTATION)
 
     CORAL_STATION_GROOVE_TO_GROOVE_DISTANCE = 0.2032
 
@@ -150,6 +167,8 @@ class FieldConstants:
 class RobotPhysicalConstants:
     BUMPER_LENGTH = 1.054
     BUMPER_WIDTH = 0.749
+
+    ROBOT_RADIUS = BUMPER_LENGTH / 2
 
     SCORING_MECHANISM_RELATIVE_TO_ROBOT_CENTER: Transform2d
     SCORING_MECHANISM_RADIUS: float

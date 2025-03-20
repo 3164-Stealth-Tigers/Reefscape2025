@@ -23,3 +23,6 @@ class Robot(commands2.TimedCommandRobot):
     def teleopInit(self) -> None:
         if self.autonomous_command:
             self.autonomous_command.cancel()
+
+    def testPeriodic(self):
+        self.container.vision.test_cameras()

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import commands2
 import rev
 import wpilib
@@ -11,7 +13,7 @@ from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder
 
 from constants import CoralArmConstants
-from sim_helper import SimHelper
+from helpers import SimHelper
 
 
 class CoralArm(commands2.Subsystem):
@@ -70,6 +72,8 @@ class CoralArm(commands2.Subsystem):
 
         wpilib.SmartDashboard.putData("Arm Mechanism", mech)
 
+        self.goal_rotation: Optional[Rotation2d] = None
+
     def simulationPeriodic(self) -> None:
         self.arm_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
 
@@ -125,19 +129,23 @@ class CoralArm(commands2.Subsystem):
 
         :param angle: Counter-clockwise positive angle where 0 degrees is horizontal, facing the front of the robot.
         """
-        ff = self.feedforward.calculate(self.angle().degrees(), self.absolute_encoder.getVelocity())
+        self.goal_rotation = angle
+        #ff = self.feedforward.calculate(self.angle().degrees(), self.absolute_encoder.getVelocity())
         self.controller.setReference(
             angle.degrees() + self.encoder_offset,
             rev.SparkBase.ControlType.kPosition,
-            arbFeedforward=ff,
-            arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
+        #    arbFeedforward=ff,
+        #    arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
         )
 
     def set_duty_cycle(self, output: float):
         self.motor.set(output)
 
-    def at_rotation(self, goal_rotation: Rotation2d) -> bool:
-        return (goal_rotation - CoralArmConstants.ARM_TOLERANCE).radians() < self.angle().radians() < (goal_rotation + CoralArmConstants.ARM_TOLERANCE).radians()
+    def at_rotation(self, rotation: Rotation2d) -> bool:
+        return (rotation - CoralArmConstants.ARM_TOLERANCE).radians() < self.angle().radians() < (rotation + CoralArmConstants.ARM_TOLERANCE).radians()
+
+    def at_goal_rotation(self) -> bool:
+        return self.at_rotation(self.goal_rotation) if self.goal_rotation else False
 
     def set_voltage(self, volts: float):
         self.controller.setReference(volts, rev.SparkBase.ControlType.kVoltage)
@@ -164,7 +172,7 @@ class CoralArm(commands2.Subsystem):
 
     def SetAngleCommand(self, angle: Rotation2d):
         return commands2.RunCommand(lambda: self.set_angle(angle), self) \
-            .until(lambda: self.at_rotation(angle))
+            .until(self.at_goal_rotation)
 
     def SysIdQuasistatic(self, direction: SysIdRoutine.Direction):
         return self.sysId_routine.quasistatic(direction)
