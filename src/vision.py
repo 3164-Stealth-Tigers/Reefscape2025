@@ -36,4 +36,3 @@ class Vision:
                 closest_pose = estimated_pose
 
         return closest_pose
-

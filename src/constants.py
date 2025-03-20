@@ -15,7 +15,7 @@ def construct_Transform3d_inches(x: float, y: float, z: float, rotation: Rotatio
 
 class DrivingConstants:
     OPEN_LOOP = False
-    FIELD_RELATIVE = False
+    FIELD_RELATIVE = True
 
     # Create Reef Constants (arrays/lists of floats)
 
@@ -31,20 +31,20 @@ class DrivingConstants:
 
     # CORAL LOCATIONS
     CORAL_LOCATIONS = {
-        "REEF_A": (2.719, 4.200, 0),  # (X, Y, HEADING (ROTATION))
-        "REEF_B": (2.738, 3.864, 0),  # (X, Y, HEADING (ROTATION))
-        "REEF_C": (3.452, 2.605, 60),  # (X, Y, HEADING (ROTATION))
-        "REEF_D": (3.764, 2.422, 60),  # (X, Y, HEADING (ROTATION))
-        "REEF_E": (5.201, 2.420, 120),  # (X, Y, HEADING (ROTATION))
-        "REEF_F": (5.500, 2.585, 120),  # (X, Y, HEADING (ROTATION))
-        "REEF_G": (6.230, 3.857, 180),  # (X, Y, HEADING (ROTATION))
-        "REEF_H": (6.244, 4.198, 180),  # (X, Y, HEADING (ROTATION))
-        "REEF_I": (5.489, 5.474, -120),  # (X, Y, HEADING (ROTATION))
-        "REEF_J": (5.224, 5.624, -120),  # (X, Y, HEADING (ROTATION))
-        "REEF_K": (3.748, 5.627, -60),  # (X, Y, HEADING (ROTATION))
-        "REEF_L": (3.479, 5.464, -60),  # (X, Y, HEADING (ROTATION))
-        "STATION_RIGHT": (1.195, 1.008, -126), # (X, Y, HEADING (ROTATION))
-        "STATION_LEFT": (1.289, 7.065, 126), # (X, Y, HEADING (ROTATION))
+        "REEF_A": (2.772101, 4.002857, 0),  # (X, Y, HEADING (ROTATION))
+        "REEF_B": (2.810831, 3.835833, 0),  # (X, Y, HEADING (ROTATION))
+        "REEF_C": (3.462838, 2.615909, 60),  # (X, Y, HEADING (ROTATION))
+        "REEF_D": (3.800886, 2.485620, 60),  # (X, Y, HEADING (ROTATION))
+        "REEF_E": (5.217147, 2.432799, 120),  # (X, Y, HEADING (ROTATION))
+        "REEF_F": (5.523858, 2.669971, 120),  # (X, Y, HEADING (ROTATION))
+        "REEF_G": (6.163223, 3.896082, 180),  # (X, Y, HEADING (ROTATION))
+        "REEF_H": (6.196424, 4.198105, 180),  # (X, Y, HEADING (ROTATION))
+        "REEF_I": (5.508357, 5.400215, -120),  # (X, Y, HEADING (ROTATION))
+        "REEF_J": (5.157020, 5.544599, -120),  # (X, Y, HEADING (ROTATION))
+        "REEF_K": (3.790836, 5.575196, -60),  # (X, Y, HEADING (ROTATION))
+        "REEF_L": (3.527338, 5.364442, -60),  # (X, Y, HEADING (ROTATION))
+        "STATION_RIGHT": (1.201429, 1.207955, -126), # (X, Y, HEADING (ROTATION))
+        "STATION_LEFT": (1.316851, 6.888527, 126), # (X, Y, HEADING (ROTATION))
     }
 
     # example usage(s): X,Y,HEADING = REEF_LEFT_CENTER
@@ -58,7 +58,9 @@ class ElevatorConstants:
     INVERT_RIGHT_MOTOR = False
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
-    kP = 13
+    kP = 13 #4
+    kD = 0
+    MAX_OUT_UP = 0.35
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0
@@ -74,9 +76,9 @@ class ElevatorConstants:
 
     LEVEL_0_HEIGHT = (35 * u.inch).m_as(u.m)
     LEVEL_1_HEIGHT = (30.5 * u.inch).m_as(u.m)
-    LEVEL_2_HEIGHT = (31 * u.inch).m_as(u.m)
-    LEVEL_3_HEIGHT = (46.5 * u.inch).m_as(u.m)
-    LEVEL_4_HEIGHT = (80 * u.inch).m_as(u.m)
+    LEVEL_2_HEIGHT = (28.5 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (44.5 * u.inch).m_as(u.m)
+    LEVEL_4_HEIGHT = (78.5 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
 
@@ -111,7 +113,7 @@ class CoralArmConstants:
     LEVEL_1_ROTATION = Rotation2d.fromDegrees(-37)
     LEVEL_2_ROTATION = Rotation2d.fromDegrees(-35)
     LEVEL_3_ROTATION = Rotation2d.fromDegrees(-35)
-    LEVEL_4_ROTATION = Rotation2d.fromDegrees(-40)
+    LEVEL_4_ROTATION = Rotation2d.fromDegrees(-35)
 
     ARM_TOLERANCE = Rotation2d.fromDegrees(2)
 
@@ -122,8 +124,8 @@ class AlgaeArmConstants:
 
     GEAR_RATIO = 100
 
-    STOWED_ANGLE = Rotation2d(-90)
-    EXTENDED_ANGLE = Rotation2d()
+    STOWED_ANGLE = Rotation2d.fromDegrees(111.35)
+    EXTENDED_ANGLE = Rotation2d.fromDegrees(5)
 
 
 class ClimberConstants:

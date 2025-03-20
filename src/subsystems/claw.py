@@ -34,7 +34,7 @@ class Claw(commands2.Subsystem):
 
     def outtake(self):
         """Run the intake motors at a constant power, pushing CORAL out of the claw."""
-        self.motor.set(-0.5)
+        self.motor.set(-0.3)
 
     def stop(self):
         """Stop running the intake motors."""

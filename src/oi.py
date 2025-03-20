@@ -41,6 +41,11 @@ class DriverActionSet(Protocol):
 
     @property
     @abstractmethod
+    def toggle_speed(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def toggle_field_relative(self) -> Trigger:
         """Toggle field-relative control on or off"""
         raise NotImplementedError
@@ -101,6 +106,16 @@ class OperatorActionSet(Protocol):
 
     @property
     @abstractmethod
+    def algae_arm_stowed(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def algae_arm_extended(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def intake(self) -> Trigger:
         raise NotImplementedError
 
@@ -117,6 +132,11 @@ class OperatorActionSet(Protocol):
     @abstractmethod
     def coral_arm(self) -> float:
         """Manual control for coral arm. Positive number moves coral arm counterclockwise."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def home_elevator(self) -> Trigger:
         raise NotImplementedError
 
 
@@ -244,6 +264,14 @@ class XboxOperator(OperatorActionSet):
     def climber_down(self) -> Trigger:
         return self.stick.povDown()
 
+    @property
+    def algae_arm_stowed(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def algae_arm_extended(self) -> Trigger:
+        return Trigger()
+
     def elevator(self) -> float:
         return deadband(-self.stick.getLeftY(), 0.08)
 
@@ -258,6 +286,10 @@ class XboxOperator(OperatorActionSet):
     def outtake(self) -> Trigger:
         return self.stick.leftBumper()
 
+    @property
+    def home_elevator(self) -> Trigger:
+        return self.stick.start()
+
 
 class XboxDriver(DriverActionSet):
     """Drive the robot with an Xbox controller"""
@@ -271,17 +303,21 @@ class XboxDriver(DriverActionSet):
 
     def forward(self) -> float:
         """The robot's movement along the X axis, controlled by moving the left joystick up and down. From -1 to 1"""
-        return deadband(-self.stick.getLeftY(), 0.08) ** 2 * sgn(-self.stick.getLeftY())
+        return deadband(-self.stick.getLeftY(), 0.08)
 
     def strafe(self) -> float:
         """The robot's movement along the Y axis, controlled by moving the left joystick left and right. From -1 to 1"""
-        return deadband(-self.stick.getLeftX(), 0.08) ** 2 * sgn(-self.stick.getLeftX())
+        return deadband(-self.stick.getLeftX(), 0.08)
 
     def turn(self) -> float:
         """The robot's movement around the Z axis, controlled by moving the right joystick left and right.
         From -1 to 1, CCW+
         """
-        return (deadband(-self.stick.getRightX(), 0.08) * 0.7) ** 2 * sgn(-self.stick.getRightX())
+        return deadband(-self.stick.getRightX(), 0.08) * 0.7
+
+    @property
+    def toggle_speed(self) -> Trigger:
+        return self.stick.x()
 
     @property
     def reset_gyro(self) -> Trigger:
@@ -507,5 +543,4 @@ class ArcadeScoringPositions(ScoringPositionsActionSet):
 def deadband(value, band):
     return value if abs(value) > band else 0
 
-def sgn(x):
-    return 1 if x > 0 else -1
+

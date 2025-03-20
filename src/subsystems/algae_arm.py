@@ -26,7 +26,8 @@ class AlgaeArm(commands2.Subsystem):
 
         motor_config.absoluteEncoder \
             .positionConversionFactor(360) \
-            .velocityConversionFactor(360 / 60)
+            .velocityConversionFactor(360 / 60) \
+            .inverted(True)
 
         motor_config.encoder \
             .positionConversionFactor(360 / AlgaeArmConstants.GEAR_RATIO) \

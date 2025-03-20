@@ -16,7 +16,7 @@ class Superstructure:
         self.coral_arm = coral_arm
         self.climber = climber
 
-    def SetEndEffectorHeight(self, end_effector_height: float, angle: Optional[Rotation2d] = None):
+    def SetEndEffectorHeight(self, end_effector_height: float, angle: Optional[Rotation2d] = None, ends: bool = True):
         """
         Create a command that will move the robot's claw (end effector) to a specified height. To accomplish this,
         the elevator and arm will move simultaneously.
@@ -38,6 +38,6 @@ class Superstructure:
         if carriage_height > ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT or carriage_height < ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT:
             raise Exception("Calculated carriage height is out of bounds.")
 
-        return self.coral_arm.SetAngleCommand(angle) \
-            .alongWith(self.elevator.SetHeightCommand(carriage_height)) \
+        return self.coral_arm.SetAngleCommand(angle, ends) \
+            .alongWith(self.elevator.SetHeightCommand(carriage_height, ends)) \
             .beforeStarting(commands2.PrintCommand(f"Height: {carriage_height}, Angle: {angle.degrees()}"))

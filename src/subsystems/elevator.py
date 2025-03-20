@@ -25,6 +25,8 @@ class Elevator(commands2.Subsystem):
         self.controller = self.leader.getClosedLoopController()
         self.encoder = self.leader.getEncoder()
 
+        self.desired_height = ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT
+
         # Initialize follower SPARK MAX
         self.follower = rev.SparkMax(ElevatorConstants.RIGHT_MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
 
@@ -104,14 +106,14 @@ class Elevator(commands2.Subsystem):
             .positionConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi)) \
             .velocityConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi) * (1 / 60))
 
+        global_config.closedLoop \
+            .pid(ElevatorConstants.kP, 0, ElevatorConstants.kD) \
+            .outputRange(-0.2, ElevatorConstants.MAX_OUT_UP)
+
         leader_config = rev.SparkBaseConfig()
         leader_config \
             .apply(global_config) \
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
-
-        leader_config.closedLoop \
-            .pid(ElevatorConstants.kP, 0, 0) \
-            .outputRange(-0.2, 0.3)
 
         leader_config.closedLoop.maxMotion \
             .maxVelocity(1) \
@@ -140,10 +142,11 @@ class Elevator(commands2.Subsystem):
             rev.SparkBase.PersistMode.kPersistParameters,
         )
 
-    def reset(self):
-        self.encoder.setPosition(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
+    def reset(self, height = ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT):
+        self.encoder.setPosition(height)
 
     def set_height(self, height: float):
+        self.desired_height = height
         ff = self.feedforward.calculate(self.encoder.getVelocity())
         self.controller.setReference(
             height,
@@ -189,11 +192,16 @@ class Elevator(commands2.Subsystem):
             .position(self.encoder.getPosition()) \
             .velocity(self.encoder.getVelocity())
 
+    def h_error(self):
+        return self.desired_height - self.carriage_height()
+
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
         builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
         builder.addDoubleProperty("Applied Voltage", lambda: self.leader.getAppliedOutput() * self.leader.getBusVoltage(), lambda _: None)
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
+        builder.addDoubleProperty("hError", self.h_error, lambda _: None)
+        builder.addDoubleProperty("Desired Height", lambda: self.desired_height, lambda _: None)
 
     def current_command_name(self) -> str:
         try:
@@ -215,9 +223,9 @@ class Elevator(commands2.Subsystem):
             commands2.RunCommand(lambda: self.set_voltage(1.5)).onlyWhile(self.lower_limit),
             commands2.WaitCommand(0.2),
             # Move the carriage down until it triggers the limit switch
-            commands2.RunCommand(lambda: self.set_voltage(-1.5)).until(self.lower_limit),
+            commands2.RunCommand(lambda: self.set_voltage(-1)).until(self.lower_limit),
             # Reset the zero position
-            commands2.InstantCommand(self.reset),
+            commands2.InstantCommand(lambda: self.reset(ElevatorConstants.LIMIT_SWITCH_HEIGHT)),
             # Stop moving the motors
             commands2.InstantCommand(lambda: self.set_voltage(0)),
             # Re-enable soft limits
@@ -227,6 +235,18 @@ class Elevator(commands2.Subsystem):
         command.addRequirements(self)
         return command
 
-    def SetHeightCommand(self, height: float):
+    def HomeElevatorWithHardLimit(self):
+        return commands2.StartEndCommand(
+            lambda: self.set_voltage(-1),
+            lambda: self.set_voltage(0),
+            self,
+        ) \
+        .beforeStarting(commands2.InstantCommand(lambda: self.enable_soft_limits(False))) \
+        .andThen(commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.reset),
+            commands2.InstantCommand(lambda: self.enable_soft_limits(True)),
+        ))
+
+    def SetHeightCommand(self, height: float, ends: bool = True):
         return commands2.RunCommand(lambda: self.set_height(height), self) \
-            .until(lambda: self.at_height(height))
+            .until(lambda: self.at_height(height) and ends)
