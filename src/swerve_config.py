@@ -10,8 +10,8 @@ from swervepy.impl import TypicalDriveComponentParameters, NeutralMode, TypicalA
 
 TRACK_WIDTH = (17.75 * u.inch).m_as(u.m)
 WHEEL_BASE = (29.75 * u.inch).m_as(u.m)
-MAX_VELOCITY = 4.2 * (u.m / u.s)
-MAX_ANGULAR_VELOCITY = 500 * (u.deg / u.s)
+MAX_VELOCITY = 0.5 * (u.m / u.s)#4.2 * (u.m / u.s)
+MAX_ANGULAR_VELOCITY = 100 * (u.deg / u.s)#500 * (u.deg / u.s)
 
 FL_ENCODER_OFFSET = 19.072266 + 180  # degrees
 FR_ENCODER_OFFSET = 269.208984 - 180

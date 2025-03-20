@@ -13,15 +13,16 @@ from swervepy import SwerveDrive
 
 
 class Superstructure:
-    def __init__(self, swerve: SwerveDrive, elevator: Elevator, coral_arm: CoralArm, climber: Climber):
+    def __init__(self, swerve: SwerveDrive, elevator: Elevator, coral_arm: CoralArm, climber: Climber, auto_align: AutoAlign):
         self.swerve = swerve
         self.elevator = elevator
         self.coral_arm = coral_arm
         self.climber = climber
+        self.aa = auto_align
 
-    def ready_to_score(self, position: str) -> bool:
+    def ready_to_score(self) -> bool:
         """Is the robot ready to release a CORAL and score?"""
-        scoring_pose = AutoAlign.get_robot_scoring_pose(position)
+        scoring_pose = self.aa.goal_pose
         return (
             # Robot is at the scoring position
             scoring_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.MAXIMUM_POSITION_ERROR and

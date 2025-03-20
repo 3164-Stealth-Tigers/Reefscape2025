@@ -37,7 +37,7 @@ class AutoAlign(Subsystem):
                             RobotPhysicalConstants.ROBOT_RADIUS, FieldConstants.REEF_HITBOX_RADIUS)
 
     @staticmethod
-    @cache
+    #@cache
     def get_robot_scoring_pose(position: str):
         pipe_translation = get_reef_pipe_translation(position)
 
@@ -61,7 +61,7 @@ class AutoAlign(Subsystem):
         return robot_pose
 
     @staticmethod
-    @cache
+    #@cache
     def get_robot_intake_pose(station: CoralStation):
         robot_pose = flip_alliance(station.value)
 
@@ -110,6 +110,10 @@ class AutoAlign(Subsystem):
                                          lambda: None, *cmd.requirements) \
             .until(self.ready_for_close) \
             .andThen(cmd)
+
+    def periodic(self) -> None:
+        field = self.swerve.field
+        field.getObject("GoalPose").setPose(self.goal_pose)
 
 
 class DriveToScoringPosition(commands2.Command):

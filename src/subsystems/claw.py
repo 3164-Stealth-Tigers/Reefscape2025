@@ -19,7 +19,6 @@ class Claw(commands2.Subsystem):
         motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)  # Prevent CORAL from getting stuck in the claw
         motor_config.smartCurrentLimit(20)
         motor_config.inverted(True)
-        motor_config.openLoopRampRate(1)
         self.motor.configure(
             motor_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
         )

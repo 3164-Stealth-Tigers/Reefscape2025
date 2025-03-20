@@ -39,7 +39,7 @@ def _(pose: Pose2d) -> Pose2d:
 
 # We should be able to cache the results of these functions, since the alliance remains constant throughout a match.
 # This is dangerous if the alliance color switches for some reason.
-@cache
+#@cache
 def get_reef_pipe_translation(position: str):
     if position.upper() not in [chr(i) for i in range(ord('A'), ord('L') + 1)]:
         raise ValueError(f"Position out of range: {position}")

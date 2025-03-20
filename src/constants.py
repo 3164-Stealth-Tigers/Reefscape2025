@@ -29,7 +29,7 @@ class DrivingConstants:
     MAXIMUM_ANGULAR_POSITION_ERROR = 1  # degrees
     MAXIMUM_ANGULAR_VELOCITY_ERROR = 1  # degrees/sec
 
-    REEF_WALL_TO_BUMPER_DISTANCE = (7.75 * u.inch).m_as(u.m)
+    REEF_WALL_TO_BUMPER_DISTANCE = (7 * u.inch).m_as(u.m)
     CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (10 * u.inch).m_as(u.m)
 
 
@@ -59,7 +59,7 @@ class ElevatorConstants:
     LEVEL_0_HEIGHT = (31 * u.inch).m_as(u.m)
     LEVEL_1_HEIGHT = (31 * u.inch).m_as(u.m)
     LEVEL_2_HEIGHT = (31.25 * u.inch).m_as(u.m)
-    LEVEL_3_HEIGHT = (47.25 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (46.75 * u.inch).m_as(u.m)
     LEVEL_4_HEIGHT = (78.5 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
@@ -92,7 +92,7 @@ class CoralArmConstants:
     ENCODER_OFFSET = 201.58  # degrees
 
     LEVEL_0_ROTATION = Rotation2d.fromDegrees(0)
-    LEVEL_1_ROTATION = Rotation2d.fromDegrees(-37)
+    LEVEL_1_ROTATION = Rotation2d.fromDegrees(-35)
     LEVEL_2_ROTATION = Rotation2d.fromDegrees(-35)
     LEVEL_3_ROTATION = Rotation2d.fromDegrees(-35)
     LEVEL_4_ROTATION = Rotation2d.fromDegrees(-35)

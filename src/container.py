@@ -89,10 +89,10 @@ class RobotContainer:
         self.claw.setDefaultCommand(self.claw.IntakeCommand())
         SmartDashboard.putData("Claw", self.claw)
 
-        # The superstructure contains commands that require multiple subsystems
-        self.superstructure = Superstructure(self.swerve, self.elevator, self.coral_arm, self.climber)
-
         self.aa = AutoAlign(self.swerve)
+
+        # The superstructure contains commands that require multiple subsystems
+        self.superstructure = Superstructure(self.swerve, self.elevator, self.coral_arm, self.climber, self.aa)
 
         self.build_forward_auto()
         self.build_autos_speed1()
