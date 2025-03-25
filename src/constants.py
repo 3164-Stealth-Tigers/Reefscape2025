@@ -116,6 +116,10 @@ class ClimberConstants:
 
     INVERT_RIGHT_MOTOR = False
 
+    FORWARD_LIMIT_DEGREES = 0
+    BACKWARD_LIMIT_DEGREES = 0
+    LIMITS_ENABLED = False
+
 
 class VisionConstants:
     CAMERAS = {

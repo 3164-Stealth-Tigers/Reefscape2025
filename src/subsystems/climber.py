@@ -14,9 +14,21 @@ class Climber(commands2.Subsystem):
         self.leader_motor = rev.SparkFlex(ClimberConstants.LEFT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
         self.follower_motor = rev.SparkFlex(ClimberConstants.RIGHT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
 
+        self.config()
+
+    def config(self):
         global_config = rev.SparkBaseConfig()
         global_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
         global_config.smartCurrentLimit(50)
+
+        leader_config = rev.SparkBaseConfig()
+        leader_config.apply(global_config)
+        leader_config.absoluteEncoder.positionConversionFactor(360)
+        leader_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
+        leader_config.softLimit.forwardSoftLimit(ClimberConstants.FORWARD_LIMIT_DEGREES)
+        leader_config.softLimit.reverseSoftLimit(ClimberConstants.BACKWARD_LIMIT_DEGREES)
+        leader_config.softLimit.forwardSoftLimitEnabled(ClimberConstants.LIMITS_ENABLED)
+        leader_config.softLimit.reverseSoftLimitEnabled(ClimberConstants.LIMITS_ENABLED)
 
         follower_config = rev.SparkBaseConfig()
         follower_config.apply(global_config)
