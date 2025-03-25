@@ -1,10 +1,13 @@
+import math
+
 import commands2
 import rev
 import playingwithfusion as pwf
 from commands2 import Command
 from wpiutil import SendableBuilder
 
-from constants import ClawConstants
+from constants import ClawConstants, ClimberConstants
+from subsystems.climber import Climber
 
 
 class Claw(commands2.Subsystem):
@@ -44,9 +47,22 @@ class Claw(commands2.Subsystem):
         """Return whether the claw is currently holding CORAL."""
         # If the distance reported by the sensor is less than a certain known distance,
         # a CORAL is sitting above the sensor; therefore, the claw has possession
+        has_piece: bool = False
+
+        encoder = self.motor.getEncoder()
+
+        motor_current = self.motor.getOutputCurrent()
+        motor_velocity = encoder.getVelocity()
+
+        if (motor_current > ClawConstants.CURRENT_LIMIT_AMPS) and (motor_velocity < 500.0):
+            has_piece = True
+        else:
+            has_piece = False
+
+        return has_piece
 
        #print(self.distance_sensor.getStatus().name)
-        return self.distance_sensor.getStatus().name in ("Status.kValid", "Status.???")
+        # return self.distance_sensor.getStatus().name in ("Status.kValid", "Status.???")
 
 
         # If the intake motors are stalled, the claw has possession of a game piece
