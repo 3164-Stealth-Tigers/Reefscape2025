@@ -22,6 +22,8 @@ class DrivingConstants:
     OPEN_LOOP = False
     FIELD_RELATIVE = True
 
+    USE_READY_FOR_CLOSE = False
+
     CLOSE_RADIUS = (3 * u.ft).m_as(u.m)
 
     MAXIMUM_POSITION_ERROR = 0.03
@@ -40,9 +42,12 @@ class ElevatorConstants:
     INVERT_RIGHT_MOTOR = False
 
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
-    kP = 4
-    kD = 0
+    POSITION_kP = 4
+    POSITION_kD = 3
+    VELOCITY_kP = 0
     MAX_OUT_UP = 1 #0.35
+    MAX_VELOCITY = (40 * u.inch / u.s).m_as(u.m / u.s)
+    MAX_ACCELERATION = (20 * u.inch / u.s / u.s).m_as(u.m / u.s / u.s)
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0

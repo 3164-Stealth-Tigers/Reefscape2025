@@ -76,6 +76,9 @@ class RobotContainer:
 
         # Configure elevator subsystem
         self.elevator = Elevator()
+        self.elevator.setDefaultCommand(
+            commands2.RunCommand(lambda: self.elevator.set_duty_cycle(self.operator_joystick.elevator()), self.elevator)
+        )
         SmartDashboard.putData("Elevator", self.elevator)
 
         # Configure arm subsystem
@@ -283,11 +286,11 @@ class RobotContainer:
         self.operator_joystick.outtake.whileTrue(self.claw.OuttakeCommand())
 
         # Elevator height buttons
-        self.operator_joystick.loading_level.onTrue(self.level_0_command())  # Loader Height -- Right Trigger
-        self.operator_joystick.level_1.onTrue(self.level_1_command())  # Level 1 -- A Button
-        self.operator_joystick.level_2.onTrue(self.aa.close_command(self.level_2_command()))  # Level 2 -- X Button
-        self.operator_joystick.level_3.onTrue(self.aa.close_command(self.level_3_command()))  # Level 3 -- B Button
-        self.operator_joystick.level_4.onTrue(self.aa.close_command(self.level_4_command()))  # Level 4 -- Y Button
+        self.operator_joystick.loading_level.whileTrue(self.level_0_command())  # Loader Height -- Right Trigger
+        self.operator_joystick.level_1.whileTrue(self.level_1_command())  # Level 1 -- A Button
+        self.operator_joystick.level_2.whileTrue(self.aa.close_command(self.level_2_command()))  # Level 2 -- X Button
+        self.operator_joystick.level_3.whileTrue(self.aa.close_command(self.level_3_command()))  # Level 3 -- B Button
+        self.operator_joystick.level_4.whileTrue(self.aa.close_command(self.level_4_command()))  # Level 4 -- Y Button
 
         self.operator_joystick.home_elevator.whileTrue(self.elevator.HomeElevatorWithHardLimit())
 

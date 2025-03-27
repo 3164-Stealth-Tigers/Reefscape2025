@@ -5,10 +5,13 @@ import commands2
 import rev
 import wpilib
 import wpimath.controller
+from commands2 import TrapezoidProfileCommand
+from rev import ClosedLoopSlot
 from wpilib.sysid import SysIdRoutineLog
 from commands2.sysid import SysIdRoutine
 from wpilib import RobotController
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
+from wpimath._controls._controls.trajectory import TrapezoidProfile
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
@@ -34,6 +37,8 @@ class Elevator(commands2.Subsystem):
         self.limit_switch_sim = DIOSim(self.limit_switch)
 
         self.feedforward = wpimath.controller.ElevatorFeedforward(*ElevatorConstants.FEEDFORWARD_CONSTANTS)
+        self.profile = TrapezoidProfile(
+            TrapezoidProfile.Constraints(ElevatorConstants.MAX_VELOCITY, ElevatorConstants.MAX_ACCELERATION))
 
         self.config()
         self.reset()
@@ -77,6 +82,7 @@ class Elevator(commands2.Subsystem):
 
         # Goal height that the elevator will try to reach
         self.goal_height: Optional[float] = None
+        self.goal_velocity: Optional[float] = None
 
     def periodic(self) -> None:
         # Update SmartDashboard visualization
@@ -110,8 +116,12 @@ class Elevator(commands2.Subsystem):
             .velocityConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi) * (1 / 60))
 
         global_config.closedLoop \
-            .pid(ElevatorConstants.kP, 0, ElevatorConstants.kD) \
-            .outputRange(-0.2, ElevatorConstants.MAX_OUT_UP)
+            .pid(ElevatorConstants.POSITION_kP, 0, ElevatorConstants.POSITION_kD, ClosedLoopSlot.kSlot0) \
+            .outputRange(-0.5, ElevatorConstants.MAX_OUT_UP, ClosedLoopSlot.kSlot0)
+
+        global_config.closedLoop \
+            .pid(ElevatorConstants.VELOCITY_kP, 0, 0, ClosedLoopSlot.kSlot1) \
+            .outputRange(-0.5, ElevatorConstants.MAX_OUT_UP, ClosedLoopSlot.kSlot1)
 
         leader_config = rev.SparkBaseConfig()
         leader_config \
@@ -119,9 +129,9 @@ class Elevator(commands2.Subsystem):
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
 
         leader_config.closedLoop.maxMotion \
-            .maxVelocity(1) \
-            .maxAcceleration(10) \
-            .allowedClosedLoopError(0.01)  # Affected by position conversion factor
+            .maxVelocity(ElevatorConstants.MAX_VELOCITY) \
+            .maxAcceleration(ElevatorConstants.MAX_ACCELERATION) \
+            .allowedClosedLoopError(ElevatorConstants.HEIGHT_TOLERANCE)  # Affected by position conversion factor
 
         leader_config.softLimit \
             .forwardSoftLimit(ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT) \
@@ -153,6 +163,14 @@ class Elevator(commands2.Subsystem):
         self.controller.setReference(
             height,
             rev.SparkBase.ControlType.kPosition,  # rev.SparkBase.ControlType.kMAXMotionPositionControl
+        )
+
+    def set_velocity(self, velocity: float):
+        self.goal_velocity = velocity
+        self.controller.setReference(
+            velocity,
+            rev.SparkBase.ControlType.kVelocity,
+            ClosedLoopSlot.kSlot1,
         )
 
     def set_duty_cycle(self, output: float):
@@ -193,7 +211,14 @@ class Elevator(commands2.Subsystem):
             .position(self.encoder.getPosition()) \
             .velocity(self.encoder.getVelocity())
 
-    def h_error(self):
+    def velocity_error(self):
+        if self.goal_velocity is not None:
+            error = self.goal_velocity - self.encoder.getVelocity()
+        else:
+            error = 0
+        return error
+
+    def height_error(self):
         if self.goal_height is not None:
             error = self.goal_height - self.carriage_height()
         else:
@@ -202,11 +227,14 @@ class Elevator(commands2.Subsystem):
 
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
+        builder.addDoubleProperty("Velocity", self.encoder.getVelocity, lambda _: None)
         builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
         builder.addDoubleProperty("Applied Voltage", lambda: self.leader.getAppliedOutput() * self.leader.getBusVoltage(), lambda _: None)
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
-        builder.addDoubleProperty("hError", self.h_error, lambda _: None)
+        builder.addDoubleProperty("hError", self.height_error, lambda _: None)
         builder.addDoubleProperty("Goal Height", lambda: self.goal_height if self.goal_height is not None else 0, lambda _: None)
+        builder.addDoubleProperty("vError", self.velocity_error, lambda _: None)
+        builder.addDoubleProperty("Goal Velocity", lambda: self.goal_velocity if self.goal_velocity is not None else 0, lambda _: None)
 
     def current_command_name(self) -> str:
         try:
@@ -253,5 +281,12 @@ class Elevator(commands2.Subsystem):
         ))
 
     def SetHeightCommand(self, height: float):
-        return commands2.RunCommand(lambda: self.set_height(height), self) \
-            .until(self.at_goal_height)
+        return commands2.TrapezoidProfileCommand(
+            self.profile,
+            lambda state: self.set_height(state.position),
+            lambda: TrapezoidProfile.State(height, 0),
+            lambda: TrapezoidProfile.State(self.carriage_height(), self.encoder.getVelocity()),
+            self,
+        ).andThen(commands2.RunCommand(lambda: self.set_height(height), self))
+        #return commands2.RunCommand(lambda: self.set_height(height), self) \
+        #    .until(self.at_goal_height)

@@ -29,7 +29,7 @@ class AutoAlign(Subsystem):
         """Is the robot close enough to its scoring position for close actions (e.g., raising the elevator)?"""
         ready = self.goal_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.CLOSE_RADIUS
         wpilib.SmartDashboard.putBoolean("AutoAlign/ReadyForClose", ready)
-        return ready
+        return ready or not DrivingConstants.USE_READY_FOR_CLOSE
 
     def will_collide_with_reef(self):
         return self.will_collide(self.swerve.pose.translation(), self.goal_pose.translation(),
@@ -109,7 +109,7 @@ class AutoAlign(Subsystem):
         return commands2.StartEndCommand(lambda: print(f"{cmd.getName()} waiting for close to reef."),
                                          lambda: None, *cmd.requirements) \
             .until(self.ready_for_close) \
-            .andThen(cmd)
+            .andThen(cmd).beforeStarting(commands2.PrintCommand(f"{cmd.getName()} done waiting!"))
 
     def periodic(self) -> None:
         field = self.swerve.field
