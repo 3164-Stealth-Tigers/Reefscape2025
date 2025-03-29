@@ -22,7 +22,7 @@ class DrivingConstants:
     OPEN_LOOP = False
     FIELD_RELATIVE = True
 
-    USE_READY_FOR_CLOSE = False
+    USE_READY_FOR_CLOSE = True
 
     CLOSE_RADIUS = (3 * u.ft).m_as(u.m)
 
@@ -44,10 +44,11 @@ class ElevatorConstants:
     FEEDFORWARD_CONSTANTS = (0, 0, 0, 0)  # kS, kG, kV, kA
     POSITION_kP = 4
     POSITION_kD = 3
-    VELOCITY_kP = 0
+    VELOCITY_kP = 0.1
     MAX_OUT_UP = 1 #0.35
-    MAX_VELOCITY = (40 * u.inch / u.s).m_as(u.m / u.s)
-    MAX_ACCELERATION = (20 * u.inch / u.s / u.s).m_as(u.m / u.s / u.s)
+    MAX_OUT_DOWN = -1
+    MAX_VELOCITY = (150 * u.inch / u.s).m_as(u.m / u.s)
+    MAX_ACCELERATION = (200 * u.inch / u.s / u.s).m_as(u.m / u.s / u.s)
 
     # Hall-Effect Sensor
     LOWER_LIMIT_SWITCH_ID = 0

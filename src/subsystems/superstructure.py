@@ -8,7 +8,7 @@ from constants import CoralArmConstants, ElevatorConstants, DrivingConstants, Fi
 from subsystems.auto_align import AutoAlign
 from subsystems.coral_arm import CoralArm
 from subsystems.climber import Climber
-from subsystems.elevator import Elevator
+from subsystems.elevator import Elevator, SetProfiledHeightCommand
 from swervepy import SwerveDrive
 
 
@@ -60,5 +60,5 @@ class Superstructure:
             raise Exception(f"Calculated carriage height is out of bounds: {carriage_height} meters")
 
         return self.coral_arm.SetAngleCommand(angle) \
-            .alongWith(self.elevator.SetHeightCommand(carriage_height)) \
+            .alongWith(SetProfiledHeightCommand(carriage_height, self.elevator)) \
             .beforeStarting(commands2.PrintCommand(f"Height: {carriage_height}, Angle: {angle.degrees()}"))

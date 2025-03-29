@@ -11,8 +11,8 @@ class Climber(commands2.Subsystem):
         self.setName("Climber")
 
         # Setup NEO motor
-        self.leader_motor = rev.SparkFlex(ClimberConstants.LEFT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
-        self.follower_motor = rev.SparkFlex(ClimberConstants.RIGHT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
+        self.follower_motor = rev.SparkFlex(ClimberConstants.LEFT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
+        self.leader_motor = rev.SparkFlex(ClimberConstants.RIGHT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
 
         self.config()
 

@@ -17,11 +17,16 @@ class Claw(commands2.Subsystem):
 
         # NEO 550 motor to spin intake wheels
         self.motor = rev.SparkMax(ClawConstants.MOTOR_ID, rev.SparkMax.MotorType.kBrushless)
+        self.encoder = self.motor.getEncoder()
 
         motor_config = rev.SparkBaseConfig()
-        motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)  # Prevent CORAL from getting stuck in the claw
-        motor_config.smartCurrentLimit(20)
-        motor_config.inverted(True)
+        motor_config \
+            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake) \
+            .smartCurrentLimit(20) \
+            .inverted(True)
+        motor_config.encoder \
+            .positionConversionFactor(360) \
+            .velocityConversionFactor(360 / 60)
         self.motor.configure(
             motor_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
         )
@@ -45,19 +50,10 @@ class Claw(commands2.Subsystem):
 
     def has_possession(self) -> bool:
         """Return whether the claw is currently holding CORAL."""
-        # If the distance reported by the sensor is less than a certain known distance,
-        # a CORAL is sitting above the sensor; therefore, the claw has possession
-        has_piece: bool = False
-
-        encoder = self.motor.getEncoder()
-
         motor_current = self.motor.getOutputCurrent()
-        motor_velocity = encoder.getVelocity()
+        motor_speed = abs(self.encoder.getVelocity())
 
-        if (motor_current > ClawConstants.CURRENT_LIMIT_AMPS) and (motor_velocity < 500.0):
-            has_piece = True
-        else:
-            has_piece = False
+        has_piece = (motor_current > ClawConstants.CURRENT_LIMIT_AMPS - 1) and (motor_speed < 500.0)
 
         return has_piece
 
@@ -70,6 +66,8 @@ class Claw(commands2.Subsystem):
 
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addBooleanProperty("Has Possession?", self.has_possession, lambda _: None)
+        builder.addDoubleProperty("Motor Current", self.motor.getOutputCurrent, lambda _: None)
+        builder.addDoubleProperty("Wheel Velocity", self.encoder.getVelocity, lambda _: None)
 
     def IntakeCommand(self):
         """Pulls the CORAL into the claw. This command will not end on its own; it must be interrupted by the user."""

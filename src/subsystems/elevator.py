@@ -1,11 +1,11 @@
 import math
-from typing import Optional
+from typing import Optional, Set
 
 import commands2
 import rev
 import wpilib
 import wpimath.controller
-from commands2 import TrapezoidProfileCommand
+from commands2 import TrapezoidProfileCommand, Subsystem
 from rev import ClosedLoopSlot
 from wpilib.sysid import SysIdRoutineLog
 from commands2.sysid import SysIdRoutine
@@ -37,8 +37,6 @@ class Elevator(commands2.Subsystem):
         self.limit_switch_sim = DIOSim(self.limit_switch)
 
         self.feedforward = wpimath.controller.ElevatorFeedforward(*ElevatorConstants.FEEDFORWARD_CONSTANTS)
-        self.profile = TrapezoidProfile(
-            TrapezoidProfile.Constraints(ElevatorConstants.MAX_VELOCITY, ElevatorConstants.MAX_ACCELERATION))
 
         self.config()
         self.reset()
@@ -121,17 +119,29 @@ class Elevator(commands2.Subsystem):
 
         global_config.closedLoop \
             .pid(ElevatorConstants.VELOCITY_kP, 0, 0, ClosedLoopSlot.kSlot1) \
-            .outputRange(-0.5, ElevatorConstants.MAX_OUT_UP, ClosedLoopSlot.kSlot1)
+            .outputRange(ElevatorConstants.MAX_OUT_DOWN, ElevatorConstants.MAX_OUT_UP, ClosedLoopSlot.kSlot1)
 
         leader_config = rev.SparkBaseConfig()
         leader_config \
             .apply(global_config) \
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
 
+        '''
+        Comment out the maxMotion below if you use this
+        NEED ElevatorConstants for MIN_VELOCITY << start with MAX_VELOCITY /2 maybe
+        '''
+        leader_config.closedLoop.smartMotion \
+            .maxVelocity(ElevatorConstants.MAX_VELOCITY, rev.ClosedLoopSlot.kSlot1) \
+            .minOutputVelocity(ElevatorConstants.MAX_VELOCITY/2, rev.ClosedLoopSlot.kSlot1) \
+            .maxAcceleration(ElevatorConstants.MAX_ACCELERATION, rev.ClosedLoopSlot.kSlot1) \
+            .allowedClosedLoopError(ElevatorConstants.HEIGHT_TOLERANCE, rev.ClosedLoopSlot.kSlot1)
+
+        '''
         leader_config.closedLoop.maxMotion \
             .maxVelocity(ElevatorConstants.MAX_VELOCITY) \
             .maxAcceleration(ElevatorConstants.MAX_ACCELERATION) \
             .allowedClosedLoopError(ElevatorConstants.HEIGHT_TOLERANCE)  # Affected by position conversion factor
+        '''
 
         leader_config.softLimit \
             .forwardSoftLimit(ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT) \
@@ -159,10 +169,11 @@ class Elevator(commands2.Subsystem):
         self.encoder.setPosition(height)
 
     def set_height(self, height: float):
-        self.goal_height = height
+        #self.goal_height = height
         self.controller.setReference(
             height,
             rev.SparkBase.ControlType.kPosition,  # rev.SparkBase.ControlType.kMAXMotionPositionControl
+            rev.ClosedLoopSlot.kSlot0,
         )
 
     def set_velocity(self, velocity: float):
@@ -171,6 +182,7 @@ class Elevator(commands2.Subsystem):
             velocity,
             rev.SparkBase.ControlType.kVelocity,
             ClosedLoopSlot.kSlot1,
+            1 / 473,
         )
 
     def set_duty_cycle(self, output: float):
@@ -281,12 +293,45 @@ class Elevator(commands2.Subsystem):
         ))
 
     def SetHeightCommand(self, height: float):
+        """
         return commands2.TrapezoidProfileCommand(
             self.profile,
             lambda state: self.set_height(state.position),
-            lambda: TrapezoidProfile.State(height, 0),
+            lambda: TrapezoidProfile.State(height),
             lambda: TrapezoidProfile.State(self.carriage_height(), self.encoder.getVelocity()),
             self,
         ).andThen(commands2.RunCommand(lambda: self.set_height(height), self))
-        #return commands2.RunCommand(lambda: self.set_height(height), self) \
-        #    .until(self.at_goal_height)
+        return commands2.RunCommand(lambda: self.set_height(height), self) \
+            .until(self.at_goal_height)
+        """
+
+class SetProfiledHeightCommand(commands2.Command):
+    def __init__(self, height: float, elevator: Elevator):
+        super().__init__()
+
+        self.setName("ProfiledHeightCommand")
+        self.goal = TrapezoidProfile.State(height)
+        self.elevator = elevator
+        self.profile = TrapezoidProfile(TrapezoidProfile.Constraints(ElevatorConstants.MAX_VELOCITY, ElevatorConstants.MAX_ACCELERATION))
+
+    def get_state(self):
+        return TrapezoidProfile.State(
+            self.elevator.carriage_height(),
+            self.elevator.encoder.getVelocity(),
+        )
+
+    def initialize(self):
+        self.setpoint = self.get_state()
+        self.elevator.goal_height = self.goal.position
+
+    def execute(self):
+        self.elevator.set_height(
+            self.setpoint.position
+        )
+        self.setpoint = self.profile.calculate(0.02, self.setpoint, self.goal)
+
+    def isFinished(self) -> bool:
+        return self.elevator.at_goal_height()
+
+    def getRequirements(self) -> Set[Subsystem]:
+        return {self.elevator}

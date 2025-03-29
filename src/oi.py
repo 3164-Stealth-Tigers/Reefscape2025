@@ -270,7 +270,7 @@ class XboxOperator(OperatorActionSet):
 
     @property
     def algae_arm_extended(self) -> Trigger:
-        return Trigger()
+        return self.stick.povLeft()
 
     def elevator(self) -> float:
         return deadband(-self.stick.getLeftY(), 0.08)
