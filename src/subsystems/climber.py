@@ -1,5 +1,7 @@
 import commands2
 import rev
+from wpimath.geometry import Rotation2d
+from wpiutil import SendableBuilder
 
 from constants import ClimberConstants
 
@@ -14,6 +16,8 @@ class Climber(commands2.Subsystem):
         self.follower_motor = rev.SparkFlex(ClimberConstants.LEFT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
         self.leader_motor = rev.SparkFlex(ClimberConstants.RIGHT_MOTOR_ID, rev.SparkBase.MotorType.kBrushless)
 
+        self.encoder = self.leader_motor.getAbsoluteEncoder()
+
         self.config()
 
     def config(self):
@@ -23,29 +27,45 @@ class Climber(commands2.Subsystem):
 
         leader_config = rev.SparkBaseConfig()
         leader_config.apply(global_config)
-        leader_config.absoluteEncoder.positionConversionFactor(360)
+
+        # Ready to climb position: 28.055
+
+        leader_config.absoluteEncoder \
+            .positionConversionFactor(360) \
+            .velocityConversionFactor(360 / 60) \
+            .zeroOffset(ClimberConstants.ZERO_OFFSET) \
+            .inverted(False)
+
         leader_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-        leader_config.softLimit.forwardSoftLimit(ClimberConstants.FORWARD_LIMIT_DEGREES)
-        leader_config.softLimit.reverseSoftLimit(ClimberConstants.BACKWARD_LIMIT_DEGREES)
-        leader_config.softLimit.forwardSoftLimitEnabled(ClimberConstants.LIMITS_ENABLED)
-        leader_config.softLimit.reverseSoftLimitEnabled(ClimberConstants.LIMITS_ENABLED)
+
+        leader_config.inverted(False)
+
+        leader_config.softLimit \
+            .forwardSoftLimit(ClimberConstants.FORWARD_LIMIT_DEGREES) \
+            .reverseSoftLimit(ClimberConstants.BACKWARD_LIMIT_DEGREES) \
+            .forwardSoftLimitEnabled(ClimberConstants.LIMITS_ENABLED) \
+            .reverseSoftLimitEnabled(ClimberConstants.LIMITS_ENABLED)
 
         follower_config = rev.SparkBaseConfig()
         follower_config.apply(global_config)
-        follower_config.follow(ClimberConstants.LEFT_MOTOR_ID, ClimberConstants.INVERT_RIGHT_MOTOR)
+        follower_config.follow(ClimberConstants.RIGHT_MOTOR_ID, ClimberConstants.INVERT_RIGHT_MOTOR)
 
         self.leader_motor.configure(
-            global_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
+            leader_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
         )
         self.follower_motor.configure(
             follower_config, rev.SparkBase.ResetMode.kResetSafeParameters, rev.SparkBase.PersistMode.kPersistParameters
         )
 
     def move_climber(self, power: float):
-        self.leader_motor.set(power)
+        self.leader_motor.set(-power)
 
     def stop(self):
         self.leader_motor.set(0)
+
+    @property
+    def angle(self) -> Rotation2d:
+        return Rotation2d.fromDegrees(self.encoder.getPosition())
 
     def RaiseRobot(self):
         """Run the climber motors at a constant power, twisting the CAGE and pulling the robot up."""
@@ -54,3 +74,6 @@ class Climber(commands2.Subsystem):
     def LowerRobot(self):
         """Run the climber motors at a constant power, lowering the robot."""
         return commands2.StartEndCommand(lambda: self.move_climber(-1), self.stop, self)
+
+    def initSendable(self, builder: SendableBuilder) -> None:
+        builder.addDoubleProperty("Angle", lambda: self.angle.degrees(), lambda _: None)

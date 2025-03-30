@@ -23,8 +23,9 @@ class DrivingConstants:
     FIELD_RELATIVE = True
 
     USE_READY_FOR_CLOSE = True
+    USE_AUTO_SCORE = True
 
-    CLOSE_RADIUS = (3 * u.ft).m_as(u.m)
+    CLOSE_RADIUS = (6 * u.ft).m_as(u.m)
 
     MAXIMUM_POSITION_ERROR = 0.03
     MAXIMUM_VELOCITY_ERROR = 0.03
@@ -75,6 +76,7 @@ class ClawConstants:
     # Motor configs
     MOTOR_ID = 11
     CURRENT_LIMIT_AMPS = 20
+    THRESHOLD_CURRENT = 15
 
     # Sensor configs
     ToF_SENSOR_ID = 1
@@ -122,9 +124,10 @@ class ClimberConstants:
 
     INVERT_RIGHT_MOTOR = False
 
-    FORWARD_LIMIT_DEGREES = 0
-    BACKWARD_LIMIT_DEGREES = 0
-    LIMITS_ENABLED = False
+    ZERO_OFFSET = 0.8341073
+    FORWARD_LIMIT_DEGREES = 160
+    BACKWARD_LIMIT_DEGREES = 60
+    LIMITS_ENABLED = True
 
 
 class VisionConstants:

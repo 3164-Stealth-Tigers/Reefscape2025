@@ -10,7 +10,7 @@ from swervepy.impl import TypicalDriveComponentParameters, NeutralMode, TypicalA
 
 TRACK_WIDTH = (17.75 * u.inch).m_as(u.m)
 WHEEL_BASE = (29.75 * u.inch).m_as(u.m)
-MAX_VELOCITY = 1 * (u.m / u.s)#4.2 * (u.m / u.s)
+MAX_VELOCITY = 0.5 * (u.m / u.s)#4.2 * (u.m / u.s)
 MAX_ANGULAR_VELOCITY = 200 * (u.deg / u.s)#500 * (u.deg / u.s)
 
 FL_ENCODER_OFFSET = 19.072266 + 180  # degrees
@@ -74,5 +74,5 @@ SWERVE_MODULES = (
     ),
 )
 
-AUTONOMOUS_PARAMS = TrajectoryFollowerParameters(4, 3, DrivingConstants.OPEN_LOOP)
-PATHFINDING_CONSTRAINTS = PathConstraints(1.5, 20, 100, 1000, 12)
+AUTONOMOUS_PARAMS = TrajectoryFollowerParameters(4, 3, DrivingConstants.OPEN_LOOP)  # P: 1
+PATHFINDING_CONSTRAINTS = PathConstraints(0.5, 20, 200, 1000, 12)#PathConstraints(1.5, 20, 100, 1000, 12)

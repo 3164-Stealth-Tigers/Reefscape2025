@@ -601,6 +601,92 @@ class PS4ScoringPositions(ScoringPositionsActionSet):
         return self.stick.R3()
 
 
+class XboxDualDriverOperator(DriverActionSet, OperatorActionSet):
+    def forward(self) -> float:
+        return deadband(-self.stick.getLeftY(), 0.08)
+
+    def strafe(self) -> float:
+        return deadband(-self.stick.getLeftX(), 0.08)
+
+    def turn(self) -> float:
+        return deadband(-self.stick.getRightX(), 0.08)
+
+    @property
+    def reset_gyro(self) -> Trigger:
+        return self.stick.start()
+
+    @property
+    def toggle_speed(self) -> Trigger:
+        return self.stick.rightBumper()
+
+    @property
+    def toggle_field_relative(self) -> Trigger:
+        return self.stick.back()
+
+    @property
+    def ski_stop(self) -> Trigger:
+        return self.stick.rightTrigger()
+
+    def is_movement_commanded(self):
+        return self.forward() + self.strafe() + self.turn() != 0
+
+    @property
+    def loading_level(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def level_1(self) -> Trigger:
+        return self.stick.a()
+
+    @property
+    def level_2(self) -> Trigger:
+        return self.stick.x()
+
+    @property
+    def level_3(self) -> Trigger:
+        return self.stick.b()
+
+    @property
+    def level_4(self) -> Trigger:
+        return self.stick.y()
+
+    @property
+    def climber_up(self) -> Trigger:
+        return self.stick.povUp()
+
+    @property
+    def climber_down(self) -> Trigger:
+        return self.stick.povDown()
+
+    @property
+    def algae_arm_stowed(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def algae_arm_extended(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def intake(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def outtake(self) -> Trigger:
+        return self.stick.leftBumper()
+
+    def elevator(self) -> float:
+        return 0
+
+    def coral_arm(self) -> float:
+        return 0
+
+    @property
+    def home_elevator(self) -> Trigger:
+        return self.stick.leftTrigger()
+
+    def __init__(self, port: int):
+        self.stick = CommandXboxController(port)
+
 
 def deadband(value, band):
     return value if abs(value) > band else 0

@@ -6,12 +6,15 @@ from typing import Set
 import commands2
 import wpilib
 from commands2 import Subsystem, Command
+from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import PIDConstants
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.trajectory import PathPlannerTrajectoryState
+from wpilib import SmartDashboard
 from wpimath.geometry import Translation2d, Transform2d, Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds
 
+import swerve_config
 from constants import RobotPhysicalConstants, FieldConstants, DrivingConstants
 from field import flip_alliance, get_reef_pipe_translation, CoralStation
 from swervepy import SwerveDrive, TrajectoryFollowerParameters
@@ -92,6 +95,9 @@ class AutoAlign(Subsystem):
         C = (a_initial.x - b.x) ** 2 + (a_initial.y - b.y) ** 2 - (radius_a + radius_b) ** 2
         discriminant = B ** 2 - 4 * A * C
 
+        if A == 0:
+            return False
+
         # Check if there is at least one solution
         if discriminant >= 0:
             # Solve the quadratic equation
@@ -114,6 +120,8 @@ class AutoAlign(Subsystem):
     def periodic(self) -> None:
         field = self.swerve.field
         field.getObject("GoalPose").setPose(self.goal_pose)
+
+        wpilib.SmartDashboard.putBoolean("AutoAlign/WillCollide", self.will_collide_with_reef())
 
 
 class DriveToScoringPosition(commands2.Command):
@@ -138,5 +146,21 @@ class DriveToScoringPosition(commands2.Command):
         self.swerve.drive(ChassisSpeeds(), DrivingConstants.OPEN_LOOP)
 
     def getRequirements(self) -> Set[Subsystem]:
-        return {self, self.swerve}
+        return {self.aa, self.swerve}
 
+"""
+def DriveToScoringPositionPathFinding(auto_align: AutoAlign, label: str):
+    return commands2.DeferredCommand(
+        lambda: AutoBuilder.pathfindToPose(
+            AutoAlign.get_robot_scoring_pose(label),
+            swerve_config.PATHFINDING_CONSTRAINTS,
+            swerve_config.PATHFINDING_CONSTRAINTS.maxVelocityMps), auto_align.swerve)
+
+
+def DriveToScoringPosition(auto_align: AutoAlign, label: str, parameters: TrajectoryFollowerParameters):
+    return DriveToScoringPositionPathFinding(auto_align, label).onlyWhile(
+        auto_align.will_collide_with_reef
+    ).andThen(
+        DriveToScoringPositionDumb(auto_align, label, parameters)
+    )
+"""

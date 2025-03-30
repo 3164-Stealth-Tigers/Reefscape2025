@@ -29,11 +29,11 @@ from subsystems.auto_align import AutoAlign, DriveToScoringPosition
 from subsystems.superstructure import Superstructure
 from commands.swerve import SkiStopCommand, DriveToPoseCommand, DriveDistanceCommand
 from constants import DrivingConstants, CoralArmConstants, ElevatorConstants, FieldConstants, RobotPhysicalConstants
-from oi import XboxDriver, XboxOperator, PS4ScoringPositions, ArcadeScoringPositions
+from oi import XboxDriver, XboxOperator, PS4ScoringPositions, ArcadeScoringPositions, XboxDualDriverOperator
 from subsystems.coral_arm import CoralArm
 from subsystems.claw import Claw
 from subsystems.climber import Climber
-from subsystems.elevator import Elevator, SetProfiledHeightCommand
+from subsystems.elevator import Elevator, SetProfiledHeightCommand, SetHeightCommand
 from swerve_config import SWERVE_MODULES, GYRO, MAX_VELOCITY, MAX_ANGULAR_VELOCITY, AUTONOMOUS_PARAMS
 from swervepy import SwerveDrive, u
 from vision import Vision
@@ -43,8 +43,8 @@ class RobotContainer:
     def __init__(self):
         DriverStation.silenceJoystickConnectionWarning(True)
 
-        self.driver_joystick = XboxDriver(0)
-        self.operator_joystick = XboxOperator(1)
+        self.driver_joystick = XboxDualDriverOperator(0)#XboxDriver(0)
+        self.operator_joystick = self.driver_joystick#XboxOperator(1)
         self.button_board = ArcadeScoringPositions(2)
         #  self.sysid_joystick = CommandXboxController(3)
 
@@ -87,6 +87,7 @@ class RobotContainer:
 
         # Configure climber subsystem
         self.climber = Climber()
+        SmartDashboard.putData("Climber", self.climber)
 
         self.claw = Claw()
         self.claw.setDefaultCommand(self.claw.IntakeCommand())
@@ -109,7 +110,8 @@ class RobotContainer:
         self.configure_button_bindings()
 
         # Setup automatic scoring
-        Trigger(self.superstructure.ready_to_score).whileTrue(self.claw.OuttakeCommand())
+        if DrivingConstants.USE_AUTO_SCORE:
+            Trigger(self.superstructure.ready_to_score).whileTrue(self.claw.OuttakeCommand())
 
     def get_autonomous_command(self) -> Command:
         return self.auto_chooser.getSelected()
@@ -151,69 +153,101 @@ class RobotContainer:
             # Reset to starting pose if simulation is running. Otherwise, the robot will pathfind to the starting pose.
             commands2.ConditionalCommand(
                 AutoBuilder.resetOdom(first_path_speed1.getStartingHolonomicPose()),
-                AutoBuilder.pathfindToPose(first_path_speed1.getStartingHolonomicPose(), swerve_config.PATHFINDING_CONSTRAINTS),
+                AutoBuilder.pathfindToPoseFlipped(first_path_speed1.getStartingHolonomicPose(), swerve_config.PATHFINDING_CONSTRAINTS),
                 wpilib.RobotBase.isSimulation
             ),
 
+            commands2.PrintCommand("Path finding finished."),
+
             commands2.ParallelCommandGroup(
-                # Orient robot into starting position and move to TR loading station (left)
-                AutoBuilder.followPath(first_path_speed1),
-                # Lift elevator half-way up to prevent wobble
-                self.level_2_command(),
+                # Lift elevator to level 4 when robot is close to the REEF
+                self.aa.close_command(self.level_4_command()),
+                commands2.SequentialCommandGroup(
+                    AutoBuilder.followPath(first_path_speed1),
+                    commands2.PrintCommand("First path follow finished."),
+                    DriveToScoringPosition(self.aa, "i", AUTONOMOUS_PARAMS).until(
+                        self.superstructure.ready_to_score
+                    ),
+                    commands2.PrintCommand("Please get here."),
+                )
             ),
 
-            # Set height/rotation to level 4 height/rotation
-            # self.level_4_command(),
+            commands2.PrintCommand("Reached Reef I."),
 
-            # Place it
-            self.claw.OuttakeCommand().withTimeout(1),
+            commands2.ParallelRaceGroup(
+                self.claw.OuttakeCommand(),
+                commands2.WaitCommand(2),
+            ),
 
-            # Drop elevator to half-height before moving
-            #self.level_2_command(),
+            commands2.PrintCommand("First outtake finished."),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
                 self.level_0_command(),
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
+                commands2.SequentialCommandGroup(
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
+                    commands2.DeferredCommand(
+                        lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
+                                                   AUTONOMOUS_PARAMS),
+                        self.swerve,
+                    ),
+                ),
+            ).until(
+                # Continue once a CORAL piece has been loaded
+                self.claw.has_possession
             ),
 
-            # Accept new piece
-            self.claw.IntakeCommand().withTimeout(2),
+            commands2.PrintCommand("First intake finished."),
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
             commands2.ParallelCommandGroup(
-                self.level_2_command(),
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
+                # Lift elevator to level 4 when robot is close to the REEF
+                self.aa.close_command(self.level_4_command()),
+                commands2.SequentialCommandGroup(
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
+                    DriveToScoringPosition(self.aa, "k", AUTONOMOUS_PARAMS),
+                )
+            ).until(
+                self.superstructure.ready_to_score
             ),
 
-            #self.level_4_command(),
-
-            self.claw.OuttakeCommand().withTimeout(1),  # Deposit coral
-
-           # self.level_2_command(),
+            commands2.ParallelRaceGroup(
+                self.claw.OuttakeCommand(),
+                commands2.WaitCommand(2),
+            ),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
                 self.level_0_command(),
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
+                commands2.SequentialCommandGroup(
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
+                    commands2.DeferredCommand(
+                        lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
+                                                   AUTONOMOUS_PARAMS),
+                        self.swerve,
+                    ),
+                ),
+            ).until(
+                # Continue once a CORAL piece has been loaded
+                self.claw.has_possession
             ),
-            self.claw.IntakeCommand().withTimeout(2),  # Receive coral
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
             commands2.ParallelCommandGroup(
-                self.level_2_command(),
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
+                # Lift elevator to level 4 when robot is close to the REEF
+                self.aa.close_command(self.level_4_command()),
+                commands2.SequentialCommandGroup(
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
+                    DriveToScoringPosition(self.aa, "l", AUTONOMOUS_PARAMS),
+                )
+            ).onlyWhile(
+                self.superstructure.ready_to_score
             ),
-            #self.level_4_command()
 
-
-            self.claw.OuttakeCommand().withTimeout(1),  # Deposit coral
-
-            # self.level_2_command()
-
-            # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
-
-
+            commands2.ParallelRaceGroup(
+                self.claw.OuttakeCommand(),
+                commands2.WaitCommand(2),
+            ),
         )
         self.auto_chooser.addOption("Speed 1", speed_1)
 
@@ -308,7 +342,7 @@ class RobotContainer:
         # Reef Positions
         for position in [chr(i) for i in range(ord('a'), ord('l') + 1)]:
             button: Trigger = getattr(self.button_board, f"reef_{position}")
-            button.onTrue(
+            button.whileTrue(
                 DriveToScoringPosition(self.aa, position, AUTONOMOUS_PARAMS).until(
                     self.driver_joystick.is_movement_commanded
                 )
@@ -337,13 +371,13 @@ class RobotContainer:
             commands2.DeferredCommand(
                 lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT), AUTONOMOUS_PARAMS),
                 self.swerve,
-            )
+            ).alongWith(self.level_0_command())
         )
         self.button_board.station_right.whileTrue(
             commands2.DeferredCommand(
                 lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.RIGHT), AUTONOMOUS_PARAMS),
                 self.swerve,
-            )
+            ).alongWith(self.level_0_command())
         )
 
         # Climber buttons
@@ -369,12 +403,12 @@ class RobotContainer:
 
 
     def level_0_command(self):
-        return SetProfiledHeightCommand(ElevatorConstants.LEVEL_0_HEIGHT, self.elevator).alongWith(
+        return SetHeightCommand(ElevatorConstants.LEVEL_0_HEIGHT, self.elevator).alongWith(
             self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_0_ROTATION)
         )
 
     def level_1_command(self):
-        return SetProfiledHeightCommand(ElevatorConstants.LEVEL_1_HEIGHT, self.elevator).alongWith(
+        return SetHeightCommand(ElevatorConstants.LEVEL_1_HEIGHT, self.elevator).alongWith(
             self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_1_ROTATION)
         )
 
@@ -385,7 +419,7 @@ class RobotContainer:
         return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_3_HEIGHT, CoralArmConstants.LEVEL_3_ROTATION)
 
     def level_4_command(self):
-        return SetProfiledHeightCommand(ElevatorConstants.LEVEL_4_HEIGHT, self.elevator).alongWith(
+        return SetHeightCommand(ElevatorConstants.LEVEL_4_HEIGHT, self.elevator).alongWith(
             self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_4_ROTATION)
         )
 

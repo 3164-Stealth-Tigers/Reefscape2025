@@ -2,13 +2,14 @@ import math
 
 import commands2
 from typing_extensions import Optional
+from wpilib import SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 
 from constants import CoralArmConstants, ElevatorConstants, DrivingConstants, FieldConstants, RobotPhysicalConstants
 from subsystems.auto_align import AutoAlign
 from subsystems.coral_arm import CoralArm
 from subsystems.climber import Climber
-from subsystems.elevator import Elevator, SetProfiledHeightCommand
+from subsystems.elevator import Elevator, SetProfiledHeightCommand, SetHeightCommand
 from swervepy import SwerveDrive
 
 
@@ -23,7 +24,7 @@ class Superstructure:
     def ready_to_score(self) -> bool:
         """Is the robot ready to release a CORAL and score?"""
         scoring_pose = self.aa.goal_pose
-        return (
+        ready_to_score = (
             # Robot is at the scoring position
             scoring_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.MAXIMUM_POSITION_ERROR and
             abs((scoring_pose.rotation() - self.swerve.pose.rotation()).degrees()) < DrivingConstants.MAXIMUM_ANGULAR_POSITION_ERROR and
@@ -36,6 +37,8 @@ class Superstructure:
             # Arm has reached scoring rotation
             self.coral_arm.at_goal_rotation()
         )
+        SmartDashboard.putBoolean("Superstructure/ReadyToScore", ready_to_score)
+        return ready_to_score
 
     def SetEndEffectorHeight(self, end_effector_height: float, angle: Optional[Rotation2d] = None):
         """
@@ -60,5 +63,5 @@ class Superstructure:
             raise Exception(f"Calculated carriage height is out of bounds: {carriage_height} meters")
 
         return self.coral_arm.SetAngleCommand(angle) \
-            .alongWith(SetProfiledHeightCommand(carriage_height, self.elevator)) \
+            .alongWith(SetHeightCommand(carriage_height, self.elevator)) \
             .beforeStarting(commands2.PrintCommand(f"Height: {carriage_height}, Angle: {angle.degrees()}"))

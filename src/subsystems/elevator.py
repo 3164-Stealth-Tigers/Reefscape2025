@@ -247,6 +247,7 @@ class Elevator(commands2.Subsystem):
         builder.addDoubleProperty("Goal Height", lambda: self.goal_height if self.goal_height is not None else 0, lambda _: None)
         builder.addDoubleProperty("vError", self.velocity_error, lambda _: None)
         builder.addDoubleProperty("Goal Velocity", lambda: self.goal_velocity if self.goal_velocity is not None else 0, lambda _: None)
+        builder.addBooleanProperty("At Goal", self.at_goal_height, lambda _: False)
 
     def current_command_name(self) -> str:
         try:
@@ -292,18 +293,6 @@ class Elevator(commands2.Subsystem):
             commands2.InstantCommand(lambda: self.enable_soft_limits(True)),
         ))
 
-    def SetHeightCommand(self, height: float):
-        """
-        return commands2.TrapezoidProfileCommand(
-            self.profile,
-            lambda state: self.set_height(state.position),
-            lambda: TrapezoidProfile.State(height),
-            lambda: TrapezoidProfile.State(self.carriage_height(), self.encoder.getVelocity()),
-            self,
-        ).andThen(commands2.RunCommand(lambda: self.set_height(height), self))
-        return commands2.RunCommand(lambda: self.set_height(height), self) \
-            .until(self.at_goal_height)
-        """
 
 class SetProfiledHeightCommand(commands2.Command):
     def __init__(self, height: float, elevator: Elevator):
@@ -313,6 +302,7 @@ class SetProfiledHeightCommand(commands2.Command):
         self.goal = TrapezoidProfile.State(height)
         self.elevator = elevator
         self.profile = TrapezoidProfile(TrapezoidProfile.Constraints(ElevatorConstants.MAX_VELOCITY, ElevatorConstants.MAX_ACCELERATION))
+        self.timer = wpilib.Timer()
 
     def get_state(self):
         return TrapezoidProfile.State(
@@ -323,6 +313,7 @@ class SetProfiledHeightCommand(commands2.Command):
     def initialize(self):
         self.setpoint = self.get_state()
         self.elevator.goal_height = self.goal.position
+        self.timer.restart()
 
     def execute(self):
         self.elevator.set_height(
@@ -330,8 +321,18 @@ class SetProfiledHeightCommand(commands2.Command):
         )
         self.setpoint = self.profile.calculate(0.02, self.setpoint, self.goal)
 
+    def end(self, interrupted: bool):
+        self.timer.stop()
+
     def isFinished(self) -> bool:
-        return self.elevator.at_goal_height()
+        return self.profile.isFinished(self.timer.get()) and self.elevator.at_goal_height()
 
     def getRequirements(self) -> Set[Subsystem]:
         return {self.elevator}
+
+
+def SetHeightCommand(height: float, elevator: Elevator):
+    return SetProfiledHeightCommand(height, elevator).andThen(
+        commands2.RunCommand(lambda: elevator.set_height(height), elevator) \
+            .until(elevator.at_goal_height)
+    )
