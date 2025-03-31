@@ -164,14 +164,17 @@ class RobotContainer:
             commands2.PrintCommand("Path finding finished."),
 
 
-            commands2.ParallelCommandGroup(
-                # Lift elevator to level 4 when robot is close to the REEF
-                self.aa.close_command(self.level_4_command()),
-                commands2.SequentialCommandGroup(
-                    AutoBuilder.followPath(first_path_speed1),
-                    commands2.PrintCommand("First path follow finished."),
-                    DriveToScoringPosition(self.aa, "i", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
-                    commands2.PrintCommand("Please get here."),
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    # Lift elevator to level 4 when robot is close to the REEF
+                    self.aa.close_command(self.level_4_command()),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(first_path_speed1),
+                        commands2.PrintCommand("First path follow finished."),
+                        DriveToScoringPosition(self.aa, "i", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
+                        commands2.PrintCommand("Please get here."),
+                    ),
                 ),
             ),
 
@@ -182,62 +185,79 @@ class RobotContainer:
             commands2.PrintCommand("First outtake finished."),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
-            commands2.ParallelCommandGroup(
-                self.level_0_command(),
-                commands2.SequentialCommandGroup(
-                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
-                    commands2.DeferredCommand(
-                        lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
-                                                   AUTONOMOUS_PARAMS),
-                        self.swerve,
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    self.level_0_command(),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
+                        commands2.DeferredCommand(
+                            lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
+                                                       AUTONOMOUS_PARAMS),
+                            self.swerve,
+                        ),
                     ),
+                ).until(
+                    # Continue once a CORAL piece has been loaded
+                    self.claw.has_possession
                 ),
-            ).until(
-                # Continue once a CORAL piece has been loaded
-                self.claw.has_possession
             ),
 
             commands2.PrintCommand("First intake finished."),
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
-            commands2.ParallelCommandGroup(
-                # Lift elevator to level 4 when robot is close to the REEF
-                self.aa.close_command(self.level_4_command()),
-                commands2.SequentialCommandGroup(
-                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
-                    DriveToScoringPosition(self.aa, "k", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
-                )
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    # Lift elevator to level 4 when robot is close to the REEF
+                    self.aa.close_command(self.level_4_command()),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
+                        DriveToScoringPosition(self.aa, "k", AUTONOMOUS_PARAMS).until(
+                            self.superstructure.ready_to_score),
+                    )
+                ),
             ),
 
             self.claw.OuttakeCommand().withTimeout(2),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
-            commands2.ParallelCommandGroup(
-                self.level_0_command(),
-                commands2.SequentialCommandGroup(
-                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
-                    commands2.DeferredCommand(
-                        lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
-                                                   AUTONOMOUS_PARAMS),
-                        self.swerve,
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    self.level_0_command(),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
+                        commands2.DeferredCommand(
+                            lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
+                                                       AUTONOMOUS_PARAMS),
+                            self.swerve,
+                        ),
                     ),
+                ).until(
+                    # Continue once a CORAL piece has been loaded
+                    self.claw.has_possession
                 ),
-            ).until(
-                # Continue once a CORAL piece has been loaded
-                self.claw.has_possession
             ),
 
             # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
-            commands2.ParallelCommandGroup(
-                # Lift elevator to level 4 when robot is close to the REEF
-                self.aa.close_command(self.level_4_command()),
-                commands2.SequentialCommandGroup(
-                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
-                    DriveToScoringPosition(self.aa, "l", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
-                )
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    # Lift elevator to level 4 when robot is close to the REEF
+                    self.aa.close_command(self.level_4_command()),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
+                        DriveToScoringPosition(self.aa, "l", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
+                    )
+                ),
             ),
 
             self.claw.OuttakeCommand().withTimeout(2),
+
+            # Back up to avoid clipping the algae
+            DriveDistanceCommand(self.swerve, -1.5, 0, 0.3),
+            self.level_0_command(),
         )
         self.auto_chooser.addOption("Speed 1", speed_1)
 
@@ -333,9 +353,7 @@ class RobotContainer:
         for position in [chr(i) for i in range(ord('a'), ord('l') + 1)]:
             button: Trigger = getattr(self.button_board, f"reef_{position}")
             button.whileTrue(
-                DriveToScoringPosition(self.aa, position, AUTONOMOUS_PARAMS).until(
-                    self.driver_joystick.is_movement_commanded
-                )
+                DriveToScoringPosition(self.aa, position, AUTONOMOUS_PARAMS)
             )
         """
         for reef_label, coordinates in DrivingConstants.CORAL_LOCATIONS.items():

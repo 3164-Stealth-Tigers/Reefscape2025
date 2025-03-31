@@ -38,7 +38,7 @@ class Climber(commands2.Subsystem):
 
         leader_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
 
-        leader_config.inverted(False)
+        leader_config.inverted(True)
 
         leader_config.softLimit \
             .forwardSoftLimit(ClimberConstants.FORWARD_LIMIT_DEGREES) \
