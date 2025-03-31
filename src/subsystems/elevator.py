@@ -333,6 +333,4 @@ class SetProfiledHeightCommand(commands2.Command):
 
 def SetHeightCommand(height: float, elevator: Elevator):
     return SetProfiledHeightCommand(height, elevator).andThen(
-        commands2.RunCommand(lambda: elevator.set_height(height), elevator) \
-            .until(elevator.at_goal_height)
-    )
+        commands2.InstantCommand(lambda: elevator.set_height(height), elevator))

@@ -98,6 +98,7 @@ class RobotContainer:
         # The superstructure contains commands that require multiple subsystems
         self.superstructure = Superstructure(self.swerve, self.elevator, self.coral_arm, self.climber, self.aa)
 
+        # Build auto routines
         self.build_forward_auto()
         self.build_autos_speed1()
         self.build_rp_auto()
@@ -111,7 +112,10 @@ class RobotContainer:
 
         # Setup automatic scoring
         if DrivingConstants.USE_AUTO_SCORE:
-            Trigger(self.superstructure.ready_to_score).whileTrue(self.claw.OuttakeCommand())
+            # Without the teleop condition, this completely breaks autonomous
+            # I have no clue why this happens, WPILib :(
+            Trigger(lambda: self.superstructure.ready_to_score() and wpilib.DriverStation.isTeleop()) \
+                .whileTrue(self.claw.OuttakeCommand())
 
     def get_autonomous_command(self) -> Command:
         return self.auto_chooser.getSelected()
@@ -159,25 +163,21 @@ class RobotContainer:
 
             commands2.PrintCommand("Path finding finished."),
 
+
             commands2.ParallelCommandGroup(
                 # Lift elevator to level 4 when robot is close to the REEF
                 self.aa.close_command(self.level_4_command()),
                 commands2.SequentialCommandGroup(
                     AutoBuilder.followPath(first_path_speed1),
                     commands2.PrintCommand("First path follow finished."),
-                    DriveToScoringPosition(self.aa, "i", AUTONOMOUS_PARAMS).until(
-                        self.superstructure.ready_to_score
-                    ),
+                    DriveToScoringPosition(self.aa, "i", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
                     commands2.PrintCommand("Please get here."),
-                )
+                ),
             ),
 
             commands2.PrintCommand("Reached Reef I."),
 
-            commands2.ParallelRaceGroup(
-                self.claw.OuttakeCommand(),
-                commands2.WaitCommand(2),
-            ),
+            self.claw.OuttakeCommand().withTimeout(2),
 
             commands2.PrintCommand("First outtake finished."),
 
@@ -205,16 +205,11 @@ class RobotContainer:
                 self.aa.close_command(self.level_4_command()),
                 commands2.SequentialCommandGroup(
                     AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL (Speed1)")),
-                    DriveToScoringPosition(self.aa, "k", AUTONOMOUS_PARAMS),
+                    DriveToScoringPosition(self.aa, "k", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
                 )
-            ).until(
-                self.superstructure.ready_to_score
             ),
 
-            commands2.ParallelRaceGroup(
-                self.claw.OuttakeCommand(),
-                commands2.WaitCommand(2),
-            ),
+            self.claw.OuttakeCommand().withTimeout(2),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelCommandGroup(
@@ -238,16 +233,11 @@ class RobotContainer:
                 self.aa.close_command(self.level_4_command()),
                 commands2.SequentialCommandGroup(
                     AutoBuilder.followPath(PathPlannerPath.fromPathFile("Load to TL - R (Speed1)")),
-                    DriveToScoringPosition(self.aa, "l", AUTONOMOUS_PARAMS),
+                    DriveToScoringPosition(self.aa, "l", AUTONOMOUS_PARAMS).until(self.superstructure.ready_to_score),
                 )
-            ).onlyWhile(
-                self.superstructure.ready_to_score
             ),
 
-            commands2.ParallelRaceGroup(
-                self.claw.OuttakeCommand(),
-                commands2.WaitCommand(2),
-            ),
+            self.claw.OuttakeCommand().withTimeout(2),
         )
         self.auto_chooser.addOption("Speed 1", speed_1)
 
@@ -404,23 +394,30 @@ class RobotContainer:
 
     def level_0_command(self):
         return SetHeightCommand(ElevatorConstants.LEVEL_0_HEIGHT, self.elevator).alongWith(
-            self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_0_ROTATION)
+            self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_0_ROTATION)).withName(
+            "Level0Command"
         )
 
     def level_1_command(self):
         return SetHeightCommand(ElevatorConstants.LEVEL_1_HEIGHT, self.elevator).alongWith(
-            self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_1_ROTATION)
+            self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_1_ROTATION)).withName(
+            "Level1Command"
         )
 
     def level_2_command(self):
-        return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_2_HEIGHT, CoralArmConstants.LEVEL_2_ROTATION)
+        return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_2_HEIGHT, CoralArmConstants.LEVEL_2_ROTATION).withName(
+            "Level2Command"
+        )
 
     def level_3_command(self):
-        return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_3_HEIGHT, CoralArmConstants.LEVEL_3_ROTATION)
+        return self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_3_HEIGHT, CoralArmConstants.LEVEL_3_ROTATION).withName(
+            "Level3Command"
+        )
 
     def level_4_command(self):
         return SetHeightCommand(ElevatorConstants.LEVEL_4_HEIGHT, self.elevator).alongWith(
-            self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_4_ROTATION)
+            self.coral_arm.SetAngleCommand(CoralArmConstants.LEVEL_4_ROTATION)).withName(
+            "Level4Command"
         )
 
     def register_named_commands(self):
