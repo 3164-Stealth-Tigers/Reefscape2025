@@ -26,8 +26,7 @@ class Superstructure:
         scoring_pose = self.aa.goal_pose
         ready_to_score = (
             # Robot is at the scoring position
-            scoring_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.MAXIMUM_POSITION_ERROR and
-            abs((scoring_pose.rotation() - self.swerve.pose.rotation()).degrees()) < DrivingConstants.MAXIMUM_ANGULAR_POSITION_ERROR and
+            self.aa.at_goal_pose and
             # Robot is not moving
             abs(self.swerve.robot_relative_speeds.vx) < DrivingConstants.MAXIMUM_VELOCITY_ERROR and
             abs(self.swerve.robot_relative_speeds.vy) < DrivingConstants.MAXIMUM_VELOCITY_ERROR and

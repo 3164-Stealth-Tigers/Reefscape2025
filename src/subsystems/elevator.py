@@ -9,7 +9,7 @@ from commands2 import TrapezoidProfileCommand, Subsystem
 from rev import ClosedLoopSlot
 from wpilib.sysid import SysIdRoutineLog
 from commands2.sysid import SysIdRoutine
-from wpilib import RobotController
+from wpilib import RobotController, DriverStation, RobotBase
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
 from wpimath._controls._controls.trajectory import TrapezoidProfile
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -212,7 +212,10 @@ class Elevator(commands2.Subsystem):
         return not self.limit_switch.get()
 
     def at_height(self, height: float) -> bool:
-        return height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < height + ElevatorConstants.HEIGHT_TOLERANCE
+        if RobotBase.isSimulation():
+            return True
+        else:
+            return height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < height + ElevatorConstants.HEIGHT_TOLERANCE
 
     def at_goal_height(self) -> bool:
         return self.at_height(self.goal_height) if self.goal_height is not None else False

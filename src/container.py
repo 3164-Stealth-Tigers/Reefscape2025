@@ -43,8 +43,8 @@ class RobotContainer:
     def __init__(self):
         DriverStation.silenceJoystickConnectionWarning(True)
 
-        self.driver_joystick = XboxDualDriverOperator(0)#XboxDriver(0)
-        self.operator_joystick = self.driver_joystick#XboxOperator(1)
+        self.driver_joystick = XboxDriver(0)#XboxDriver(0)
+        self.operator_joystick = XboxOperator(1)
         self.button_board = ArcadeScoringPositions(2)
         #  self.sysid_joystick = CommandXboxController(3)
 
@@ -77,7 +77,8 @@ class RobotContainer:
         # Configure elevator subsystem
         self.elevator = Elevator()
         #self.elevator.setDefaultCommand(
-        #    commands2.RunCommand(lambda: self.elevator.set_duty_cycle(self.operator_joystick.elevator()), self.elevator)
+        #    commands2.RunCommand(
+        #        lambda: self.elevator.set_height(self.elevator.carriage_height() + (self.operator_joystick.elevator() * 0.1)), self.elevator)
         #)
         SmartDashboard.putData("Elevator", self.elevator)
 
@@ -161,9 +162,6 @@ class RobotContainer:
                 wpilib.RobotBase.isSimulation
             ),
 
-            commands2.PrintCommand("Path finding finished."),
-
-
             commands2.ParallelRaceGroup(
                 self.claw.IntakeCommand(),
                 commands2.ParallelCommandGroup(
@@ -180,26 +178,27 @@ class RobotContainer:
 
             commands2.PrintCommand("Reached Reef I."),
 
-            self.claw.OuttakeCommand().withTimeout(2),
+            self.claw.OuttakeCommand().withTimeout(1.5),
 
             commands2.PrintCommand("First outtake finished."),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelRaceGroup(
                 self.claw.IntakeCommand(),
-                commands2.ParallelCommandGroup(
-                    self.level_0_command(),
-                    commands2.SequentialCommandGroup(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
-                        commands2.DeferredCommand(
-                            lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
-                                                       AUTONOMOUS_PARAMS),
-                            self.swerve,
+                commands2.SequentialCommandGroup(
+                    self.backup_off_reef(),
+                    commands2.ParallelCommandGroup(
+                        self.level_0_command(),
+                        commands2.SequentialCommandGroup(
+                            AutoBuilder.followPath(PathPlannerPath.fromPathFile("TR to Loading (Speed1)")),
+                            commands2.DeferredCommand(
+                                lambda: DriveToPoseCommand(self.swerve,
+                                                           AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
+                                                           AUTONOMOUS_PARAMS),
+                                self.swerve,
+                            ).until(self.claw.has_possession),  # Continue once a CORAL piece has been loaded,
                         ),
                     ),
-                ).until(
-                    # Continue once a CORAL piece has been loaded
-                    self.claw.has_possession
                 ),
             ),
 
@@ -219,24 +218,25 @@ class RobotContainer:
                 ),
             ),
 
-            self.claw.OuttakeCommand().withTimeout(2),
+            self.claw.OuttakeCommand().withTimeout(1.5),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
             commands2.ParallelRaceGroup(
                 self.claw.IntakeCommand(),
-                commands2.ParallelCommandGroup(
-                    self.level_0_command(),
-                    commands2.SequentialCommandGroup(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
-                        commands2.DeferredCommand(
-                            lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
-                                                       AUTONOMOUS_PARAMS),
-                            self.swerve,
+                commands2.SequentialCommandGroup(
+                    self.backup_off_reef(),
+                    commands2.ParallelCommandGroup(
+                        self.level_0_command(),
+                        commands2.SequentialCommandGroup(
+                            AutoBuilder.followPath(PathPlannerPath.fromPathFile("TL to Load (Speed1)")),
+                            commands2.DeferredCommand(
+                                lambda: DriveToPoseCommand(self.swerve,
+                                                           AutoAlign.get_robot_intake_pose(CoralStation.LEFT),
+                                                           AUTONOMOUS_PARAMS),
+                                self.swerve,
+                            ).until(self.claw.has_possession),  # Continue once a CORAL piece has been loaded,
                         ),
                     ),
-                ).until(
-                    # Continue once a CORAL piece has been loaded
-                    self.claw.has_possession
                 ),
             ),
 
@@ -253,10 +253,10 @@ class RobotContainer:
                 ),
             ),
 
-            self.claw.OuttakeCommand().withTimeout(2),
+            self.claw.OuttakeCommand().withTimeout(1.5),
 
             # Back up to avoid clipping the algae
-            DriveDistanceCommand(self.swerve, -1.5, 0, 0.3),
+            DriveDistanceCommand(self.swerve, -0.3, 0, 0.3),
             self.level_0_command(),
         )
         self.auto_chooser.addOption("Speed 1", speed_1)
@@ -379,13 +379,13 @@ class RobotContainer:
             commands2.DeferredCommand(
                 lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.LEFT), AUTONOMOUS_PARAMS),
                 self.swerve,
-            ).alongWith(self.level_0_command())
+            ).alongWith(self.level_0_command()).beforeStarting(self.backup_off_reef())
         )
         self.button_board.station_right.whileTrue(
             commands2.DeferredCommand(
                 lambda: DriveToPoseCommand(self.swerve, AutoAlign.get_robot_intake_pose(CoralStation.RIGHT), AUTONOMOUS_PARAMS),
                 self.swerve,
-            ).alongWith(self.level_0_command())
+            ).alongWith(self.level_0_command()).beforeStarting(self.backup_off_reef())
         )
 
         # Climber buttons
@@ -409,6 +409,19 @@ class RobotContainer:
 
     ### Setup re-used commands ###
 
+
+    def backup_off_reef(self):
+        return commands2.ConditionalCommand(
+            DriveDistanceCommand(self.swerve, -0.8, 0, 0.3),
+            InstantCommand(lambda: None),
+            lambda: self.swerve.pose.translation().distance(flip_alliance(FieldConstants.REEF_CENTER_TRANSLATION)) < DrivingConstants.CLOSE_RADIUS + (FieldConstants.REEF_INSCRIBED_DIAMETER / 2),
+        ).alongWith(
+            commands2.ConditionalCommand(
+                self.level_2_command(),
+                InstantCommand(lambda: None),
+                lambda: self.elevator.carriage_height_inches() > 45,
+            )
+        )
 
     def level_0_command(self):
         return SetHeightCommand(ElevatorConstants.LEVEL_0_HEIGHT, self.elevator).alongWith(

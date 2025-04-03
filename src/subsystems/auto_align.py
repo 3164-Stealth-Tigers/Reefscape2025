@@ -58,6 +58,7 @@ class AutoAlign(Subsystem):
         # Offset the pose such that the front of the bumper touches the reef wall
         robot_pose = robot_pose.transformBy(
             Transform2d(0, -RobotPhysicalConstants.SCORING_MECHANISM_Y_DISTANCE_TO_ROBOT_CENTER, 0)).transformBy(
+            Transform2d(0, RobotPhysicalConstants.REEF_Y_FUDGE, 0)).transformBy(
             Transform2d(-RobotPhysicalConstants.BUMPER_LENGTH / 2, 0, 0)).transformBy(
             Transform2d(-DrivingConstants.REEF_WALL_TO_BUMPER_DISTANCE, 0, 0)
         )
@@ -117,11 +118,20 @@ class AutoAlign(Subsystem):
             .until(self.ready_for_close) \
             .andThen(cmd).beforeStarting(commands2.PrintCommand(f"{cmd.getName()} done waiting!"))
 
+    @property
+    def at_goal_pose(self) -> bool:
+        goal = self.goal_pose
+        return (
+            goal.translation().distance(self.swerve.pose.translation()) < DrivingConstants.MAXIMUM_POSITION_ERROR and
+            abs((goal.rotation() - self.swerve.pose.rotation()).degrees()) < DrivingConstants.MAXIMUM_ANGULAR_POSITION_ERROR
+        )
+
     def periodic(self) -> None:
         field = self.swerve.field
         field.getObject("GoalPose").setPose(self.goal_pose)
 
         wpilib.SmartDashboard.putBoolean("AutoAlign/WillCollide", self.will_collide_with_reef())
+        wpilib.SmartDashboard.putBoolean("AutoAlign/AtGoal", self.at_goal_pose)
 
 
 class DriveToScoringPosition(commands2.Command):
@@ -147,6 +157,9 @@ class DriveToScoringPosition(commands2.Command):
 
     def getRequirements(self) -> Set[Subsystem]:
         return {self.aa, self.swerve}
+
+    def runsWhenDisabled(self) -> bool:
+        return True
 
 """
 def DriveToScoringPositionPathFinding(auto_align: AutoAlign, label: str):

@@ -675,14 +675,14 @@ class XboxDualDriverOperator(DriverActionSet, OperatorActionSet):
         return self.stick.leftBumper()
 
     def elevator(self) -> float:
-        return 0
+        return self.stick.getRightTriggerAxis() - self.stick.getLeftTriggerAxis()
 
     def coral_arm(self) -> float:
         return 0
 
     @property
     def home_elevator(self) -> Trigger:
-        return self.stick.leftTrigger()
+        return self.stick.rightBumper()
 
     def __init__(self, port: int):
         self.stick = CommandXboxController(port)

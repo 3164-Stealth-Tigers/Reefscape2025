@@ -58,7 +58,7 @@ class Climber(commands2.Subsystem):
         )
 
     def move_climber(self, power: float):
-        self.leader_motor.set(-power)
+        self.leader_motor.set(power)
 
     def stop(self):
         self.leader_motor.set(0)

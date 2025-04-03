@@ -74,5 +74,5 @@ SWERVE_MODULES = (
     ),
 )
 
-AUTONOMOUS_PARAMS = TrajectoryFollowerParameters(theta_kP=4, xy_kP=1, drive_open_loop=DrivingConstants.OPEN_LOOP)  # P: 4 or 0.7
+AUTONOMOUS_PARAMS = TrajectoryFollowerParameters(theta_kP=4, xy_kP=2, drive_open_loop=DrivingConstants.OPEN_LOOP)  # P: 4 or 0.7
 PATHFINDING_CONSTRAINTS = PathConstraints(0.5, 20, 200, 1000, 12)#PathConstraints(1.5, 20, 100, 1000, 12)

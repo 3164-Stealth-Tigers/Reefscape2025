@@ -32,7 +32,7 @@ class DrivingConstants:
     MAXIMUM_ANGULAR_POSITION_ERROR = 1  # degrees
     MAXIMUM_ANGULAR_VELOCITY_ERROR = 1  # degrees/sec
 
-    REEF_WALL_TO_BUMPER_DISTANCE = (7 * u.inch).m_as(u.m)
+    REEF_WALL_TO_BUMPER_DISTANCE = (8 * u.inch).m_as(u.m)
     CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (8 * u.inch).m_as(u.m)
 
 
@@ -125,19 +125,19 @@ class ClimberConstants:
     INVERT_RIGHT_MOTOR = False
 
     ZERO_OFFSET = 0.8341073
-    FORWARD_LIMIT_DEGREES = 160
-    BACKWARD_LIMIT_DEGREES = 60
+    FORWARD_LIMIT_DEGREES = 153
+    BACKWARD_LIMIT_DEGREES = 76
     LIMITS_ENABLED = True
 
 
 class VisionConstants:
     CAMERAS = {
         # Front-left swerve
-        "FLSwerveCam": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
-                                                    .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
+        #"FLSwerveCam": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
+        #                                            .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
         # Front-right swerve
-        "FRSwerveCam": construct_Transform3d_inches(13.375, -9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
-                                                    .rotateBy(Rotation3d.fromDegrees(0, 0, -30))),
+        #"FRSwerveCam": construct_Transform3d_inches(13.375, -9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
+        #                                            .rotateBy(Rotation3d.fromDegrees(0, 0, -30))),
         # Front-facing camera
         "FrontTagCamera": construct_Transform3d_inches(9.048, 9.65, 11.25, Rotation3d.fromDegrees(0, 0, 0)),
         # Back-facing camera
@@ -191,5 +191,6 @@ class RobotPhysicalConstants:
 
     ROBOT_RADIUS = BUMPER_LENGTH / 2
 
-    SCORING_MECHANISM_Y_DISTANCE_TO_ROBOT_CENTER = (-(0.5 + 0.25) * u.inch).m_as(u.m)
+    SCORING_MECHANISM_Y_DISTANCE_TO_ROBOT_CENTER = 0#(-(0.5 + 0.25) * u.inch).m_as(u.m)
+    REEF_Y_FUDGE = (-0.5 * u.inch).m_as(u.m)
     SCORING_MECHANISM_RADIUS: float
