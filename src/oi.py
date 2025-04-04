@@ -139,6 +139,11 @@ class OperatorActionSet(Protocol):
     def home_elevator(self) -> Trigger:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def auto_toggle(self) -> Trigger:
+        raise NotImplementedError
+
 
 class ScoringPositionsActionSet(Protocol):
     # All of these positions are based on the view from robot sim (different sides of the hexagon)
@@ -289,6 +294,10 @@ class XboxOperator(OperatorActionSet):
     @property
     def home_elevator(self) -> Trigger:
         return self.stick.start()
+
+    @property
+    def auto_toggle(self) -> Trigger:
+        return self.stick.back()
 
 
 class XboxDriver(DriverActionSet):
@@ -683,6 +692,10 @@ class XboxDualDriverOperator(DriverActionSet, OperatorActionSet):
     @property
     def home_elevator(self) -> Trigger:
         return self.stick.rightBumper()
+
+    @property
+    def auto_toggle(self) -> Trigger:
+        return Trigger()
 
     def __init__(self, port: int):
         self.stick = CommandXboxController(port)

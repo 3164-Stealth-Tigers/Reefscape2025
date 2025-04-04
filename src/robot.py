@@ -26,3 +26,6 @@ class Robot(commands2.TimedCommandRobot):
 
     def testPeriodic(self):
         self.container.vision.test_cameras()
+
+    def robotPeriodic(self):
+        self.container.log_data()

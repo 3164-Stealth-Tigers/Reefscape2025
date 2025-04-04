@@ -23,9 +23,9 @@ class DrivingConstants:
     FIELD_RELATIVE = True
 
     USE_READY_FOR_CLOSE = True
-    USE_AUTO_SCORE = True
+    USE_AUTO_SCORE = False
 
-    CLOSE_RADIUS = (6 * u.ft).m_as(u.m)
+    CLOSE_RADIUS = (4.5 * u.ft).m_as(u.m)
 
     MAXIMUM_POSITION_ERROR = 0.03
     MAXIMUM_VELOCITY_ERROR = 0.03
@@ -129,22 +129,22 @@ class ClimberConstants:
     BACKWARD_LIMIT_DEGREES = 76
     LIMITS_ENABLED = True
 
+# 10045
 
 class VisionConstants:
     CAMERAS = {
         # Front-left swerve
         #"FLSwerveCam": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
         #                                            .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
-        # Front-right swerve
-        #"FRSwerveCam": construct_Transform3d_inches(13.375, -9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
-        #                                            .rotateBy(Rotation3d.fromDegrees(0, 0, -30))),
-        # Front-facing camera
+        # Right Front-facing camera
+        "FRSwerveCam": construct_Transform3d_inches(9.048, -9.65, 0, Rotation3d.fromDegrees(0, 0, 0)),
+        # Left Front-facing camera
         "FrontTagCamera": construct_Transform3d_inches(9.048, 9.65, 11.25, Rotation3d.fromDegrees(0, 0, 0)),
         # Back-facing camera
-        "BackTagCamera": construct_Transform3d_inches(7.952, -9.65, 25.25, Rotation3d.fromDegrees(0, 0,180)),
+        #"BackTagCamera": construct_Transform3d_inches(7.952, -9.65, 25.25, Rotation3d.fromDegrees(0, 0,180)),
         # Right-facing camera, tilted 15 degrees ups
-        "SideTagCamera": construct_Transform3d_inches(8.5, -9.508, 8.669, Rotation3d.fromDegrees(0, 0, -90)
-                                                      .rotateBy(Rotation3d.fromDegrees(0, 15, 0))),
+        #"SideTagCamera": construct_Transform3d_inches(8.5, -9.508, 8.669, Rotation3d.fromDegrees(0, 0, -90)
+        #                                              .rotateBy(Rotation3d.fromDegrees(0, 15, 0))),
     }
 
 
@@ -192,5 +192,5 @@ class RobotPhysicalConstants:
     ROBOT_RADIUS = BUMPER_LENGTH / 2
 
     SCORING_MECHANISM_Y_DISTANCE_TO_ROBOT_CENTER = 0#(-(0.5 + 0.25) * u.inch).m_as(u.m)
-    REEF_Y_FUDGE = (-0.5 * u.inch).m_as(u.m)
+    REEF_Y_FUDGE = (0.75 * u.inch).m_as(u.m)  # Move 3/4" to the left
     SCORING_MECHANISM_RADIUS: float

@@ -27,12 +27,13 @@ class AutoAlign(Subsystem):
 
         self.swerve = swerve
         self.goal_pose = Pose2d()
+        self.use_close = True
 
     def ready_for_close(self) -> bool:
         """Is the robot close enough to its scoring position for close actions (e.g., raising the elevator)?"""
         ready = self.goal_pose.translation().distance(self.swerve.pose.translation()) < DrivingConstants.CLOSE_RADIUS
         wpilib.SmartDashboard.putBoolean("AutoAlign/ReadyForClose", ready)
-        return ready or not DrivingConstants.USE_READY_FOR_CLOSE
+        return ready or not DrivingConstants.USE_READY_FOR_CLOSE or not self.use_close
 
     def will_collide_with_reef(self):
         return self.will_collide(self.swerve.pose.translation(), self.goal_pose.translation(),
@@ -132,6 +133,7 @@ class AutoAlign(Subsystem):
 
         wpilib.SmartDashboard.putBoolean("AutoAlign/WillCollide", self.will_collide_with_reef())
         wpilib.SmartDashboard.putBoolean("AutoAlign/AtGoal", self.at_goal_pose)
+        wpilib.SmartDashboard.putBoolean("AutoAlign/UseClose", self.use_close)
 
 
 class DriveToScoringPosition(commands2.Command):

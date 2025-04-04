@@ -53,7 +53,9 @@ class RobotContainer:
 
         self.vision = Vision()
 
+        self.use_automation = True
         self.speed_exponent = 2
+
         # Configure drivetrain
         self.swerve = SwerveDrive(
             SWERVE_MODULES,
@@ -103,7 +105,7 @@ class RobotContainer:
         self.build_forward_auto()
         self.build_autos_speed1()
         self.build_rp_auto()
-        #self.build_autos_speed2()
+        self.build_autos_speed2()
 
         # Register Named Commands for PathPlanner after initializing subsystems but before the rest of init
         self.register_named_commands()
@@ -115,8 +117,12 @@ class RobotContainer:
         if DrivingConstants.USE_AUTO_SCORE:
             # Without the teleop condition, this completely breaks autonomous
             # I have no clue why this happens, WPILib :(
-            Trigger(lambda: self.superstructure.ready_to_score() and wpilib.DriverStation.isTeleop()) \
+            Trigger(lambda: self.superstructure.ready_to_score() and wpilib.DriverStation.isTeleop() and self.use_automation) \
                 .whileTrue(self.claw.OuttakeCommand())
+
+    def log_data(self):
+        wpilib.SmartDashboard.putBoolean("Slow Speed", self.speed_exponent == 2)
+        wpilib.SmartDashboard.putBoolean("Use Automation", self.use_automation)
 
     def get_autonomous_command(self) -> Command:
         return self.auto_chooser.getSelected()
@@ -158,7 +164,7 @@ class RobotContainer:
             # Reset to starting pose if simulation is running. Otherwise, the robot will pathfind to the starting pose.
             commands2.ConditionalCommand(
                 AutoBuilder.resetOdom(first_path_speed1.getStartingHolonomicPose()),
-                AutoBuilder.pathfindToPoseFlipped(first_path_speed1.getStartingHolonomicPose(), swerve_config.PATHFINDING_CONSTRAINTS),
+                commands2.InstantCommand(),#AutoBuilder.pathfindToPoseFlipped(first_path_speed1.getStartingHolonomicPose(), swerve_config.PATHFINDING_CONSTRAINTS),
                 wpilib.RobotBase.isSimulation
             ),
 
@@ -261,54 +267,116 @@ class RobotContainer:
         )
         self.auto_chooser.addOption("Speed 1", speed_1)
 
+
+    # start to br, F
+    # br to mcdonalds, R loading
+    # bk to bl, C
+    # from bl back to bk, R loading
+    # bk to bl RIGHT SIDE OF CORAL, D
     def build_autos_speed2(self):
         first_path_speed2 = PathPlannerPath.fromPathFile("start to br")
 
         speed_2 = commands2.SequentialCommandGroup(
-            # Orient robot into starting position
-            AutoBuilder.resetOdom(first_path_speed2.getStartingHolonomicPose()),
-
-            # Set height/rotation to level 4 height/rotation and move to br (Bottom Right - Right)
-            #commands2.ParallelCommandGroup(
-            #    self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, CoralArmConstants.LEVEL_4_ROTATION),
-            #    AutoBuilder.followPath(first_path_speed2),
-            #),
-
-            # Place it
-            # self.claw.OuttakeCommand(),
-
-            # Set height/rotation to level 0 height/rotation and travel to loading station
-            commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, CoralArmConstants.LEVEL_0_ROTATION),
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("br to macdonalds")),
+            # Reset to starting pose if simulation is running. Otherwise, the robot will pathfind to the starting pose.
+            commands2.ConditionalCommand(
+                AutoBuilder.resetOdom(first_path_speed2.getStartingHolonomicPose()),
+                commands2.InstantCommand(),#AutoBuilder.pathfindToPoseFlipped(first_path_speed2.getStartingHolonomicPose(),
+                #                                  swerve_config.PATHFINDING_CONSTRAINTS),
+                wpilib.RobotBase.isSimulation
             ),
 
-            # Accept new piece
-            # self.claw.IntakeCommand(),
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    # Lift elevator to level 4 when robot is close to the REEF
+                    self.aa.close_command(self.level_4_command()),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(first_path_speed2),
+                        DriveToScoringPosition(self.aa, "f", AUTONOMOUS_PARAMS).until(
+                            self.superstructure.ready_to_score),
+                    ),
+                ),
+            ),
 
-            # Set height/rotation to level 4 height/rotation and travel to BL (left)
-            #commands2.ParallelCommandGroup(
-            #    self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, CoralArmConstants.LEVEL_4_ROTATION),
-            #    AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl")),
-            #),
-            # self.claw.OuttakeCommand(),  # Deposit coral
+            self.claw.OuttakeCommand().withTimeout(1.5),
 
             # Set height/rotation to level 0 height/rotation and travel to loading station
-            commands2.ParallelCommandGroup(
-                self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_0_HEIGHT, CoralArmConstants.LEVEL_0_ROTATION),
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("from bl back to bk")),
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.SequentialCommandGroup(
+                    self.backup_off_reef(),
+                    commands2.ParallelCommandGroup(
+                        self.level_0_command(),
+                        commands2.SequentialCommandGroup(
+                            AutoBuilder.followPath(PathPlannerPath.fromPathFile("br to macdonalds")),
+                            commands2.DeferredCommand(
+                                lambda: DriveToPoseCommand(self.swerve,
+                                                           AutoAlign.get_robot_intake_pose(CoralStation.RIGHT),
+                                                           AUTONOMOUS_PARAMS),
+                                self.swerve,
+                            ).until(self.claw.has_possession),  # Continue once a CORAL piece has been loaded,
+                        ),
+                    ),
+                ),
             ),
-            # self.claw.IntakeCommand(),  # Receive coral
 
-            # Set height/rotation to level 4 height/rotation and travel to BL loading station (right)
-            #commands2.ParallelCommandGroup(
-            #    self.superstructure.SetEndEffectorHeight(ElevatorConstants.LEVEL_4_HEIGHT, CoralArmConstants.LEVEL_4_ROTATION),
-            #    AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl RIGHT SIDE OF THE CORAL")),
-            #),
-            # self.claw.OuttakeCommand(),  # Deposit coral
+            commands2.PrintCommand("First intake finished."),
 
-            # AutoBuilder.followPath(PathPlannerPath.fromPathFile("")),
+            # Set height/rotation to level 4 height/rotation and travel to TL loading (left)
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    # Lift elevator to level 4 when robot is close to the REEF
+                    self.aa.close_command(self.level_4_command()),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl")),
+                        DriveToScoringPosition(self.aa, "c", AUTONOMOUS_PARAMS).until(
+                            self.superstructure.ready_to_score),
+                    )
+                ),
+            ),
 
+            self.claw.OuttakeCommand().withTimeout(1.5),
+
+            # Set height/rotation to level 0 height/rotation and travel to loading station
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.SequentialCommandGroup(
+                    self.backup_off_reef(),
+                    commands2.ParallelCommandGroup(
+                        self.level_0_command(),
+                        commands2.SequentialCommandGroup(
+                            AutoBuilder.followPath(PathPlannerPath.fromPathFile("from bl back to bk")),
+                            commands2.DeferredCommand(
+                                lambda: DriveToPoseCommand(self.swerve,
+                                                           AutoAlign.get_robot_intake_pose(CoralStation.RIGHT),
+                                                           AUTONOMOUS_PARAMS),
+                                self.swerve,
+                            ).until(self.claw.has_possession),  # Continue once a CORAL piece has been loaded,
+                        ),
+                    ),
+                ),
+            ),
+
+            # Set height/rotation to level 4 height/rotation and travel to TL loading (right)
+            commands2.ParallelRaceGroup(
+                self.claw.IntakeCommand(),
+                commands2.ParallelCommandGroup(
+                    # Lift elevator to level 4 when robot is close to the REEF
+                    self.aa.close_command(self.level_4_command()),
+                    commands2.SequentialCommandGroup(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("bk to bl RIGHT SIDE OF THE CORAL")),
+                        DriveToScoringPosition(self.aa, "d", AUTONOMOUS_PARAMS).until(
+                            self.superstructure.ready_to_score),
+                    )
+                ),
+            ),
+
+            self.claw.OuttakeCommand().withTimeout(1.5),
+
+            # Back up to avoid clipping the algae
+            DriveDistanceCommand(self.swerve, -0.3, 0, 0.3),
+            self.level_0_command(),
         )
         self.auto_chooser.addOption("Speed 2", speed_2)
 
@@ -323,6 +391,10 @@ class RobotContainer:
         self.driver_joystick.ski_stop.onTrue(SkiStopCommand(self.swerve).until(self.driver_joystick.is_movement_commanded))
         self.driver_joystick.toggle_speed.onTrue(
             commands2.InstantCommand(lambda: setattr(self, "speed_exponent", 2 if self.speed_exponent == 1 else 1))
+        )
+
+        self.operator_joystick.auto_toggle.onTrue(
+            commands2.InstantCommand(lambda: setattr(self.aa, "use_close", not self.aa.use_close))
         )
 
         # Intake/outtake buttons
