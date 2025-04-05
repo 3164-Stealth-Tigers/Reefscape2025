@@ -61,9 +61,16 @@ class AutoAlign(Subsystem):
             Transform2d(0, -RobotPhysicalConstants.SCORING_MECHANISM_Y_DISTANCE_TO_ROBOT_CENTER, 0)).transformBy(
             Transform2d(0, RobotPhysicalConstants.REEF_Y_FUDGE, 0)).transformBy(
             Transform2d(-RobotPhysicalConstants.BUMPER_LENGTH / 2, 0, 0)).transformBy(
-            Transform2d(-DrivingConstants.REEF_WALL_TO_BUMPER_DISTANCE, 0, 0)
+            Transform2d(-DrivingConstants.REEF_WALL_TO_BUMPER_DISTANCE_FINAL, 0, 0)
         )
         return robot_pose
+
+    @staticmethod
+    def get_robot_approach_pose(position: str):
+        pose = AutoAlign.get_robot_scoring_pose(position)
+        return pose.transformBy(
+            Transform2d(-(DrivingConstants.REEF_WALL_TO_BUMPER_DISTANCE_APPROACH - DrivingConstants.REEF_WALL_TO_BUMPER_DISTANCE_FINAL), 0, 0)
+        )
 
     @staticmethod
     #@cache
@@ -162,6 +169,35 @@ class DriveToScoringPosition(commands2.Command):
 
     def runsWhenDisabled(self) -> bool:
         return True
+
+
+class DriveToApproachPosition(commands2.Command):
+    def __init__(self, auto_align: AutoAlign, label: str, parameters: TrajectoryFollowerParameters):
+        super().__init__()
+        self.aa = auto_align
+        self.swerve = auto_align.swerve
+        self.label = label
+        self.controller = PPHolonomicDriveController(PIDConstants(parameters.xy_kP), PIDConstants(parameters.theta_kP))
+
+    def initialize(self):
+        target_pose = AutoAlign.get_robot_approach_pose(self.label)
+        self.aa.goal_pose = target_pose
+        self.target = PathPlannerTrajectoryState(pose=target_pose)
+        self.controller.reset(self.swerve.pose, self.swerve.robot_relative_speeds)
+
+    def execute(self):
+        output = self.controller.calculateRobotRelativeSpeeds(self.swerve.pose, self.target)
+        self.swerve.drive(output, DrivingConstants.OPEN_LOOP)
+
+    def end(self, interrupted: bool):
+        self.swerve.drive(ChassisSpeeds(), DrivingConstants.OPEN_LOOP)
+
+    def getRequirements(self) -> Set[Subsystem]:
+        return {self.aa, self.swerve}
+
+    def runsWhenDisabled(self) -> bool:
+        return False
+
 
 """
 def DriveToScoringPositionPathFinding(auto_align: AutoAlign, label: str):

@@ -32,7 +32,8 @@ class DrivingConstants:
     MAXIMUM_ANGULAR_POSITION_ERROR = 1  # degrees
     MAXIMUM_ANGULAR_VELOCITY_ERROR = 1  # degrees/sec
 
-    REEF_WALL_TO_BUMPER_DISTANCE = (8 * u.inch).m_as(u.m)
+    REEF_WALL_TO_BUMPER_DISTANCE_APPROACH = (10 * u.inch).m_as(u.m)
+    REEF_WALL_TO_BUMPER_DISTANCE_FINAL = (8 * u.inch).m_as(u.m)
     CORAL_STATION_WALL_TO_BUMPER_DISTANCE = (8 * u.inch).m_as(u.m)
 
 
@@ -66,7 +67,7 @@ class ElevatorConstants:
     LEVEL_0_HEIGHT = (30.5 * u.inch).m_as(u.m)
     LEVEL_1_HEIGHT = (31 * u.inch).m_as(u.m)
     LEVEL_2_HEIGHT = (31.25 * u.inch).m_as(u.m)
-    LEVEL_3_HEIGHT = (46.75 * u.inch).m_as(u.m)
+    LEVEL_3_HEIGHT = (45.25 * u.inch).m_as(u.m)
     LEVEL_4_HEIGHT = (78.5 * u.inch).m_as(u.m)
 
     HEIGHT_TOLERANCE = 0.0254  # meters
@@ -137,7 +138,7 @@ class VisionConstants:
         #"FLSwerveCam": construct_Transform3d_inches(13.375, 9, 8.25, Rotation3d.fromDegrees(0, -28.125, 0)
         #                                            .rotateBy(Rotation3d.fromDegrees(0, 0, 30))),
         # Right Front-facing camera
-        "FRSwerveCam": construct_Transform3d_inches(9.048, -9.65, 0, Rotation3d.fromDegrees(0, 0, 0)),
+        "FRSwerveCam": construct_Transform3d_inches(9.048, -9.65, 13 + 1.75, Rotation3d.fromDegrees(0, 0, -3)),
         # Left Front-facing camera
         "FrontTagCamera": construct_Transform3d_inches(9.048, 9.65, 11.25, Rotation3d.fromDegrees(0, 0, 0)),
         # Back-facing camera

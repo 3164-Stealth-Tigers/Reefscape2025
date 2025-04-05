@@ -41,6 +41,8 @@ class Elevator(commands2.Subsystem):
         self.config()
         self.reset()
 
+        self.goal_level_name = None
+
         # Setup mechanism and gearbox for simulation
         gearbox = DCMotor.NEO(2)
         self.motor_sim = rev.SparkMaxSim(self.leader, gearbox)
