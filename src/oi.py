@@ -41,6 +41,11 @@ class DriverActionSet(Protocol):
 
     @property
     @abstractmethod
+    def toggle_speed(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def toggle_field_relative(self) -> Trigger:
         """Toggle field-relative control on or off"""
         raise NotImplementedError
@@ -101,6 +106,16 @@ class OperatorActionSet(Protocol):
 
     @property
     @abstractmethod
+    def algae_arm_stowed(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def algae_arm_extended(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def intake(self) -> Trigger:
         raise NotImplementedError
 
@@ -117,6 +132,16 @@ class OperatorActionSet(Protocol):
     @abstractmethod
     def coral_arm(self) -> float:
         """Manual control for coral arm. Positive number moves coral arm counterclockwise."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def home_elevator(self) -> Trigger:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def auto_toggle(self) -> Trigger:
         raise NotImplementedError
 
 
@@ -244,6 +269,14 @@ class XboxOperator(OperatorActionSet):
     def climber_down(self) -> Trigger:
         return self.stick.povDown()
 
+    @property
+    def algae_arm_stowed(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def algae_arm_extended(self) -> Trigger:
+        return self.stick.povLeft()
+
     def elevator(self) -> float:
         return deadband(-self.stick.getLeftY(), 0.08)
 
@@ -258,6 +291,14 @@ class XboxOperator(OperatorActionSet):
     def outtake(self) -> Trigger:
         return self.stick.leftBumper()
 
+    @property
+    def home_elevator(self) -> Trigger:
+        return self.stick.start()
+
+    @property
+    def auto_toggle(self) -> Trigger:
+        return self.stick.back()
+
 
 class XboxDriver(DriverActionSet):
     """Drive the robot with an Xbox controller"""
@@ -271,17 +312,21 @@ class XboxDriver(DriverActionSet):
 
     def forward(self) -> float:
         """The robot's movement along the X axis, controlled by moving the left joystick up and down. From -1 to 1"""
-        return deadband(-self.stick.getLeftY(), 0.08) ** 2 * sgn(-self.stick.getLeftY())
+        return deadband(-self.stick.getLeftY(), 0.08)
 
     def strafe(self) -> float:
         """The robot's movement along the Y axis, controlled by moving the left joystick left and right. From -1 to 1"""
-        return deadband(-self.stick.getLeftX(), 0.08) ** 2 * sgn(-self.stick.getLeftX())
+        return deadband(-self.stick.getLeftX(), 0.08)
 
     def turn(self) -> float:
         """The robot's movement around the Z axis, controlled by moving the right joystick left and right.
         From -1 to 1, CCW+
         """
-        return (deadband(-self.stick.getRightX(), 0.08) * 0.7) ** 2 * sgn(-self.stick.getRightX())
+        return deadband(-self.stick.getRightX(), 0.08) * 0.7
+
+    @property
+    def toggle_speed(self) -> Trigger:
+        return self.stick.x()
 
     @property
     def reset_gyro(self) -> Trigger:
@@ -504,8 +549,159 @@ class ArcadeScoringPositions(ScoringPositionsActionSet):
         return self.stick.button(12)  # K12
 
 
+class PS4ScoringPositions(ScoringPositionsActionSet):
+    def __init__(self, port: int):
+        self.stick = CommandPS4Controller(port)
+
+    @property
+    def reef_i(self) -> Trigger:
+        return self.stick.L1()
+
+    @property
+    def reef_c(self) -> Trigger:
+        return self.stick.povDown()
+
+    @property
+    def reef_d(self) -> Trigger:
+        return self.stick.povRight()
+
+    @property
+    def reef_e(self) -> Trigger:
+        return self.stick.triangle()
+
+    @property
+    def reef_f(self) -> Trigger:
+        return self.stick.square()
+
+    @property
+    def reef_g(self) -> Trigger:
+        return self.stick.cross()
+
+    @property
+    def reef_h(self) -> Trigger:
+        return self.stick.circle()
+
+    @property
+    def reef_j(self) -> Trigger:
+         return self.stick.L2()
+
+    @property
+    def reef_k(self) -> Trigger:
+        return self.stick.R1()
+
+    @property
+    def reef_l(self) -> Trigger:
+        return self.stick.R2()
+
+    @property
+    def reef_a(self) -> Trigger:
+        return self.stick.povUp()
+
+    @property
+    def reef_b(self) -> Trigger:
+        return self.stick.povLeft()
+
+    @property
+    def station_left(self) -> Trigger:
+        return self.stick.L3()
+
+    @property
+    def station_right(self) -> Trigger:
+        return self.stick.R3()
+
+
+class XboxDualDriverOperator(DriverActionSet, OperatorActionSet):
+    def forward(self) -> float:
+        return deadband(-self.stick.getLeftY(), 0.08)
+
+    def strafe(self) -> float:
+        return deadband(-self.stick.getLeftX(), 0.08)
+
+    def turn(self) -> float:
+        return deadband(-self.stick.getRightX(), 0.08)
+
+    @property
+    def reset_gyro(self) -> Trigger:
+        return self.stick.start()
+
+    @property
+    def toggle_speed(self) -> Trigger:
+        return self.stick.rightBumper()
+
+    @property
+    def toggle_field_relative(self) -> Trigger:
+        return self.stick.back()
+
+    @property
+    def ski_stop(self) -> Trigger:
+        return self.stick.rightTrigger()
+
+    def is_movement_commanded(self):
+        return self.forward() + self.strafe() + self.turn() != 0
+
+    @property
+    def loading_level(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def level_1(self) -> Trigger:
+        return self.stick.a()
+
+    @property
+    def level_2(self) -> Trigger:
+        return self.stick.x()
+
+    @property
+    def level_3(self) -> Trigger:
+        return self.stick.b()
+
+    @property
+    def level_4(self) -> Trigger:
+        return self.stick.y()
+
+    @property
+    def climber_up(self) -> Trigger:
+        return self.stick.povUp()
+
+    @property
+    def climber_down(self) -> Trigger:
+        return self.stick.povDown()
+
+    @property
+    def algae_arm_stowed(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def algae_arm_extended(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def intake(self) -> Trigger:
+        return Trigger()
+
+    @property
+    def outtake(self) -> Trigger:
+        return self.stick.leftBumper()
+
+    def elevator(self) -> float:
+        return self.stick.getRightTriggerAxis() - self.stick.getLeftTriggerAxis()
+
+    def coral_arm(self) -> float:
+        return 0
+
+    @property
+    def home_elevator(self) -> Trigger:
+        return self.stick.rightBumper()
+
+    @property
+    def auto_toggle(self) -> Trigger:
+        return Trigger()
+
+    def __init__(self, port: int):
+        self.stick = CommandXboxController(port)
+
+
 def deadband(value, band):
     return value if abs(value) > band else 0
 
-def sgn(x):
-    return 1 if x > 0 else -1
+

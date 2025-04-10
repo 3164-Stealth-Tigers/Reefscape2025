@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import RoboRioSim, BatterySim
 
-from sim_helper import SimHelper
+from helpers import SimHelper
 
 if TYPE_CHECKING:
     from robot import Robot

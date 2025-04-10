@@ -1,18 +1,22 @@
 import math
+from typing import Optional, Set
 
 import commands2
 import rev
 import wpilib
 import wpimath.controller
+from commands2 import TrapezoidProfileCommand, Subsystem
+from rev import ClosedLoopSlot
 from wpilib.sysid import SysIdRoutineLog
 from commands2.sysid import SysIdRoutine
-from wpilib import RobotController
+from wpilib import RobotController, DriverStation, RobotBase
 from wpilib.simulation import ElevatorSim, RoboRioSim, BatterySim, DIOSim
+from wpimath._controls._controls.trajectory import TrapezoidProfile
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpiutil import SendableBuilder, Sendable
 
 from constants import ElevatorConstants, CoralArmConstants
-from sim_helper import SimHelper
+from helpers import SimHelper
 
 
 class Elevator(commands2.Subsystem):
@@ -36,6 +40,8 @@ class Elevator(commands2.Subsystem):
 
         self.config()
         self.reset()
+
+        self.goal_level_name = None
 
         # Setup mechanism and gearbox for simulation
         gearbox = DCMotor.NEO(2)
@@ -74,7 +80,12 @@ class Elevator(commands2.Subsystem):
 
         wpilib.SmartDashboard.putData("Elevator Mechanism", mech)
 
+        # Goal height that the elevator will try to reach
+        self.goal_height: Optional[float] = None
+        self.goal_velocity: Optional[float] = None
+
     def periodic(self) -> None:
+        # Update SmartDashboard visualization
         self.elevator.setLength(self.carriage_height())
 
     def simulationPeriodic(self) -> None:
@@ -104,19 +115,35 @@ class Elevator(commands2.Subsystem):
             .positionConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi)) \
             .velocityConversionFactor(2 * (1 / ElevatorConstants.GEAR_RATIO) * (ElevatorConstants.SPROCKET_PITCH_DIAMETER * math.pi) * (1 / 60))
 
+        global_config.closedLoop \
+            .pid(ElevatorConstants.POSITION_kP, 0, ElevatorConstants.POSITION_kD, ClosedLoopSlot.kSlot0) \
+            .outputRange(-0.5, ElevatorConstants.MAX_OUT_UP, ClosedLoopSlot.kSlot0)
+
+        global_config.closedLoop \
+            .pid(ElevatorConstants.VELOCITY_kP, 0, 0, ClosedLoopSlot.kSlot1) \
+            .outputRange(ElevatorConstants.MAX_OUT_DOWN, ElevatorConstants.MAX_OUT_UP, ClosedLoopSlot.kSlot1)
+
         leader_config = rev.SparkBaseConfig()
         leader_config \
             .apply(global_config) \
             .inverted(ElevatorConstants.INVERT_LEFT_MOTOR)
 
-        leader_config.closedLoop \
-            .pid(ElevatorConstants.kP, 0, 0) \
-            .outputRange(-0.2, 0.3)
+        '''
+        Comment out the maxMotion below if you use this
+        NEED ElevatorConstants for MIN_VELOCITY << start with MAX_VELOCITY /2 maybe
+        '''
+        leader_config.closedLoop.smartMotion \
+            .maxVelocity(ElevatorConstants.MAX_VELOCITY, rev.ClosedLoopSlot.kSlot1) \
+            .minOutputVelocity(ElevatorConstants.MAX_VELOCITY/2, rev.ClosedLoopSlot.kSlot1) \
+            .maxAcceleration(ElevatorConstants.MAX_ACCELERATION, rev.ClosedLoopSlot.kSlot1) \
+            .allowedClosedLoopError(ElevatorConstants.HEIGHT_TOLERANCE, rev.ClosedLoopSlot.kSlot1)
 
+        '''
         leader_config.closedLoop.maxMotion \
-            .maxVelocity(1) \
-            .maxAcceleration(10) \
-            .allowedClosedLoopError(0.01)  # Affected by position conversion factor
+            .maxVelocity(ElevatorConstants.MAX_VELOCITY) \
+            .maxAcceleration(ElevatorConstants.MAX_ACCELERATION) \
+            .allowedClosedLoopError(ElevatorConstants.HEIGHT_TOLERANCE)  # Affected by position conversion factor
+        '''
 
         leader_config.softLimit \
             .forwardSoftLimit(ElevatorConstants.MAXIMUM_CARRIAGE_HEIGHT) \
@@ -140,16 +167,24 @@ class Elevator(commands2.Subsystem):
             rev.SparkBase.PersistMode.kPersistParameters,
         )
 
-    def reset(self):
-        self.encoder.setPosition(ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT)
+    def reset(self, height = ElevatorConstants.MINIMUM_CARRIAGE_HEIGHT):
+        self.encoder.setPosition(height)
 
     def set_height(self, height: float):
-        ff = self.feedforward.calculate(self.encoder.getVelocity())
+        #self.goal_height = height
         self.controller.setReference(
             height,
             rev.SparkBase.ControlType.kPosition,  # rev.SparkBase.ControlType.kMAXMotionPositionControl
-            arbFeedforward=ff,
-            arbFFUnits=rev.SparkClosedLoopController.ArbFFUnits.kVoltage,
+            rev.ClosedLoopSlot.kSlot0,
+        )
+
+    def set_velocity(self, velocity: float):
+        self.goal_velocity = velocity
+        self.controller.setReference(
+            velocity,
+            rev.SparkBase.ControlType.kVelocity,
+            ClosedLoopSlot.kSlot1,
+            1 / 473,
         )
 
     def set_duty_cycle(self, output: float):
@@ -178,10 +213,14 @@ class Elevator(commands2.Subsystem):
         # Hall Effect sensor returns False when magnet is detected.
         return not self.limit_switch.get()
 
-    def at_height(self, goal_height: float) -> bool:
-        return goal_height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < goal_height + ElevatorConstants.HEIGHT_TOLERANCE
+    def at_height(self, height: float) -> bool:
+        if RobotBase.isSimulation():
+            return True
+        else:
+            return height - ElevatorConstants.HEIGHT_TOLERANCE < self.carriage_height() < height + ElevatorConstants.HEIGHT_TOLERANCE
 
-
+    def at_goal_height(self) -> bool:
+        return self.at_height(self.goal_height) if self.goal_height is not None else False
 
     def sysId_log(self, log: SysIdRoutineLog):
         log.motor("elevator") \
@@ -189,11 +228,31 @@ class Elevator(commands2.Subsystem):
             .position(self.encoder.getPosition()) \
             .velocity(self.encoder.getVelocity())
 
+    def velocity_error(self):
+        if self.goal_velocity is not None:
+            error = self.goal_velocity - self.encoder.getVelocity()
+        else:
+            error = 0
+        return error
+
+    def height_error(self):
+        if self.goal_height is not None:
+            error = self.goal_height - self.carriage_height()
+        else:
+            error = 0
+        return error
+
     def initSendable(self, builder: SendableBuilder) -> None:
         builder.addDoubleProperty("Height", self.carriage_height, lambda _: None)
+        builder.addDoubleProperty("Velocity", self.encoder.getVelocity, lambda _: None)
         builder.addBooleanProperty("Limit Switch Triggered", self.lower_limit, lambda value: self.limit_switch_sim.setValue(not value))
         builder.addDoubleProperty("Applied Voltage", lambda: self.leader.getAppliedOutput() * self.leader.getBusVoltage(), lambda _: None)
         builder.addStringProperty("Command", self.current_command_name, lambda _: None)
+        builder.addDoubleProperty("hError", self.height_error, lambda _: None)
+        builder.addDoubleProperty("Goal Height", lambda: self.goal_height if self.goal_height is not None else 0, lambda _: None)
+        builder.addDoubleProperty("vError", self.velocity_error, lambda _: None)
+        builder.addDoubleProperty("Goal Velocity", lambda: self.goal_velocity if self.goal_velocity is not None else 0, lambda _: None)
+        builder.addBooleanProperty("At Goal", self.at_goal_height, lambda _: False)
 
     def current_command_name(self) -> str:
         try:
@@ -215,9 +274,9 @@ class Elevator(commands2.Subsystem):
             commands2.RunCommand(lambda: self.set_voltage(1.5)).onlyWhile(self.lower_limit),
             commands2.WaitCommand(0.2),
             # Move the carriage down until it triggers the limit switch
-            commands2.RunCommand(lambda: self.set_voltage(-1.5)).until(self.lower_limit),
+            commands2.RunCommand(lambda: self.set_voltage(-1)).until(self.lower_limit),
             # Reset the zero position
-            commands2.InstantCommand(self.reset),
+            commands2.InstantCommand(lambda: self.reset(ElevatorConstants.LIMIT_SWITCH_HEIGHT)),
             # Stop moving the motors
             commands2.InstantCommand(lambda: self.set_voltage(0)),
             # Re-enable soft limits
@@ -227,6 +286,56 @@ class Elevator(commands2.Subsystem):
         command.addRequirements(self)
         return command
 
-    def SetHeightCommand(self, height: float):
-        return commands2.RunCommand(lambda: self.set_height(height), self) \
-            .until(lambda: self.at_height(height))
+    def HomeElevatorWithHardLimit(self):
+        return commands2.StartEndCommand(
+            lambda: self.set_voltage(-1),
+            lambda: self.set_voltage(0),
+            self,
+        ) \
+        .beforeStarting(commands2.InstantCommand(lambda: self.enable_soft_limits(False))) \
+        .andThen(commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.reset),
+            commands2.InstantCommand(lambda: self.enable_soft_limits(True)),
+        ))
+
+
+class SetProfiledHeightCommand(commands2.Command):
+    def __init__(self, height: float, elevator: Elevator):
+        super().__init__()
+
+        self.setName("ProfiledHeightCommand")
+        self.goal = TrapezoidProfile.State(height)
+        self.elevator = elevator
+        self.profile = TrapezoidProfile(TrapezoidProfile.Constraints(ElevatorConstants.MAX_VELOCITY, ElevatorConstants.MAX_ACCELERATION))
+        self.timer = wpilib.Timer()
+
+    def get_state(self):
+        return TrapezoidProfile.State(
+            self.elevator.carriage_height(),
+            self.elevator.encoder.getVelocity(),
+        )
+
+    def initialize(self):
+        self.setpoint = self.get_state()
+        self.elevator.goal_height = self.goal.position
+        self.timer.restart()
+
+    def execute(self):
+        self.elevator.set_height(
+            self.setpoint.position
+        )
+        self.setpoint = self.profile.calculate(0.02, self.setpoint, self.goal)
+
+    def end(self, interrupted: bool):
+        self.timer.stop()
+
+    def isFinished(self) -> bool:
+        return self.profile.isFinished(self.timer.get()) and self.elevator.at_goal_height()
+
+    def getRequirements(self) -> Set[Subsystem]:
+        return {self.elevator}
+
+
+def SetHeightCommand(height: float, elevator: Elevator):
+    return SetProfiledHeightCommand(height, elevator).andThen(
+        commands2.InstantCommand(lambda: elevator.set_height(height), elevator))

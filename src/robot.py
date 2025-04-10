@@ -1,7 +1,7 @@
 from typing import Optional
 
 import commands2
-from wpilib import DataLogManager
+from wpilib import DataLogManager, CameraServer
 
 from container import RobotContainer
 
@@ -23,3 +23,9 @@ class Robot(commands2.TimedCommandRobot):
     def teleopInit(self) -> None:
         if self.autonomous_command:
             self.autonomous_command.cancel()
+
+    def testPeriodic(self):
+        self.container.vision.test_cameras()
+
+    def robotPeriodic(self):
+        self.container.log_data()
