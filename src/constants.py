@@ -25,7 +25,7 @@ class DrivingConstants:
     USE_READY_FOR_CLOSE = True
     USE_AUTO_SCORE = False
 
-    CLOSE_RADIUS = (4.5 * u.ft).m_as(u.m)
+    CLOSE_RADIUS = (5.5 * u.ft).m_as(u.m)
 
     MAXIMUM_POSITION_ERROR = 0.03
     MAXIMUM_VELOCITY_ERROR = 0.03
@@ -66,7 +66,7 @@ class ElevatorConstants:
 
     LEVEL_0_HEIGHT = (30.5 * u.inch).m_as(u.m)
     LEVEL_1_HEIGHT = (31 * u.inch).m_as(u.m)
-    LEVEL_2_HEIGHT = (31.25 * u.inch).m_as(u.m)
+    LEVEL_2_HEIGHT = (29.75 * u.inch).m_as(u.m)
     LEVEL_3_HEIGHT = (45.25 * u.inch).m_as(u.m)
     LEVEL_4_HEIGHT = (78.5 * u.inch).m_as(u.m)
 
