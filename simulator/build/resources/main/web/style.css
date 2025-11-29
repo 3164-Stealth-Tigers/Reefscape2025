@@ -1,0 +1,366 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #0f3460;
+}
+
+.header h1 {
+    font-size: 1.5em;
+    color: #e94560;
+    text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+.header-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.header-info span {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.status {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+}
+
+.status.connected {
+    background: #00a878;
+    color: white;
+}
+
+.status.disconnected {
+    background: #e94560;
+    color: white;
+}
+
+#score {
+    color: #ffd700;
+}
+
+/* Main content layout */
+.main-content {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Field container */
+.field-container {
+    flex: 1;
+    background: #16213e;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #0f3460;
+}
+
+#field-canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+/* Side panel */
+.side-panel {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.panel {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #0f3460;
+}
+
+.panel h2 {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Subsystems */
+.subsystem {
+    margin-bottom: 15px;
+}
+
+.subsystem:last-child {
+    margin-bottom: 0;
+}
+
+.subsystem-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.subsystem-name {
+    font-weight: bold;
+    color: #ccc;
+}
+
+.subsystem-value {
+    font-family: 'Consolas', monospace;
+    color: #00d4ff;
+}
+
+.progress-bar {
+    height: 20px;
+    background: #0f3460;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar.small {
+    height: 12px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00a878, #00d4ff);
+    transition: width 0.1s ease;
+}
+
+.progress-goal {
+    position: absolute;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background: #e94560;
+    transition: left 0.1s ease;
+}
+
+/* Arm visual */
+.arm-visual {
+    height: 40px;
+    background: #0f3460;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.arm-indicator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60px;
+    height: 4px;
+    background: #00d4ff;
+    transform-origin: left center;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.1s ease;
+    border-radius: 2px;
+}
+
+/* Claw indicator */
+.claw-indicator {
+    height: 30px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8em;
+}
+
+.claw-indicator.empty {
+    background: #0f3460;
+    color: #666;
+}
+
+.claw-indicator.empty::after {
+    content: 'Empty';
+}
+
+.claw-indicator.intaking {
+    background: #ffd700;
+    color: #000;
+    animation: pulse 0.5s infinite;
+}
+
+.claw-indicator.intaking::after {
+    content: 'Intaking...';
+}
+
+.claw-indicator.holding {
+    background: #00a878;
+    color: #fff;
+}
+
+.claw-indicator.holding::after {
+    content: 'Holding Coral';
+}
+
+.claw-indicator.outtaking {
+    background: #e94560;
+    color: #fff;
+    animation: pulse 0.3s infinite;
+}
+
+.claw-indicator.outtaking::after {
+    content: 'Scoring!';
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Info panel */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.75em;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.info-value {
+    font-family: 'Consolas', monospace;
+    font-size: 1em;
+    color: #00d4ff;
+}
+
+/* Mode indicators */
+.mode-indicators {
+    display: flex;
+    gap: 10px;
+}
+
+.mode-indicator {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 0.8em;
+    background: #0f3460;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.mode-indicator.active {
+    background: #00a878;
+    color: #fff;
+}
+
+/* Controls panel */
+.controls-panel {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #0f3460;
+}
+
+.controls-panel h2 {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.control-group h3 {
+    font-size: 0.85em;
+    color: #e94560;
+    margin-bottom: 8px;
+}
+
+.control-item {
+    font-size: 0.8em;
+    margin-bottom: 5px;
+    color: #aaa;
+}
+
+kbd {
+    background: #0f3460;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.9em;
+    margin-right: 3px;
+    border: 1px solid #1a1a2e;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .side-panel {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .side-panel .panel {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .controls-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}

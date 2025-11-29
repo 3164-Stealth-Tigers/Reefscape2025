@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reefscape 2025 Simulator - Team 3164</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>REEFSCAPE 2025 SIMULATOR</h1>
+            <div class="header-info">
+                <span id="connection-status" class="status disconnected">Disconnected</span>
+                <span id="match-time">0:00</span>
+                <span id="score">Score: 0</span>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <!-- Field visualization -->
+            <div class="field-container">
+                <canvas id="field-canvas" width="800" height="400"></canvas>
+            </div>
+
+            <!-- Right panel -->
+            <div class="side-panel">
+                <!-- Subsystem status -->
+                <div class="panel subsystem-panel">
+                    <h2>SUBSYSTEMS</h2>
+
+                    <div class="subsystem">
+                        <div class="subsystem-header">
+                            <span class="subsystem-name">Elevator</span>
+                            <span id="elevator-value" class="subsystem-value">30.5"</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="elevator-bar" class="progress-fill" style="width: 0%"></div>
+                            <div id="elevator-goal" class="progress-goal"></div>
+                        </div>
+                    </div>
+
+                    <div class="subsystem">
+                        <div class="subsystem-header">
+                            <span class="subsystem-name">Arm</span>
+                            <span id="arm-value" class="subsystem-value">0°</span>
+                        </div>
+                        <div class="arm-visual">
+                            <div id="arm-indicator" class="arm-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="subsystem">
+                        <div class="subsystem-header">
+                            <span class="subsystem-name">Claw</span>
+                            <span id="claw-value" class="subsystem-value">EMPTY</span>
+                        </div>
+                        <div id="claw-indicator" class="claw-indicator empty"></div>
+                    </div>
+
+                    <div class="subsystem">
+                        <div class="subsystem-header">
+                            <span class="subsystem-name">Climber</span>
+                            <span id="climber-value" class="subsystem-value">0"</span>
+                        </div>
+                        <div class="progress-bar small">
+                            <div id="climber-bar" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Robot info -->
+                <div class="panel info-panel">
+                    <h2>ROBOT</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Position</span>
+                            <span id="robot-position" class="info-value">(0.0, 0.0)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Heading</span>
+                            <span id="robot-heading" class="info-value">0°</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Speed</span>
+                            <span id="robot-speed" class="info-value">0.0 m/s</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Level</span>
+                            <span id="current-level" class="info-value">L0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Command</span>
+                            <span id="current-command" class="info-value">Idle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode indicators -->
+                <div class="panel mode-panel">
+                    <div class="mode-indicators">
+                        <div id="mode-field-rel" class="mode-indicator active">Field Relative</div>
+                        <div id="mode-slow" class="mode-indicator">Slow Mode</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls help -->
+        <div class="controls-panel">
+            <h2>CONTROLS</h2>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <h3>Drive</h3>
+                    <div class="control-item"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</div>
+                    <div class="control-item"><kbd>Q</kbd><kbd>E</kbd> Rotate</div>
+                    <div class="control-item"><kbd>X</kbd> Toggle Speed</div>
+                    <div class="control-item"><kbd>C</kbd> Toggle Field Rel</div>
+                    <div class="control-item"><kbd>V</kbd> Ski Stop</div>
+                    <div class="control-item"><kbd>G</kbd> Reset Gyro</div>
+                </div>
+                <div class="control-group">
+                    <h3>Scoring</h3>
+                    <div class="control-item"><kbd>R</kbd> Loading (L0)</div>
+                    <div class="control-item"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> Levels</div>
+                    <div class="control-item"><kbd>Space</kbd> Intake</div>
+                    <div class="control-item"><kbd>Shift</kbd> Outtake</div>
+                </div>
+                <div class="control-group">
+                    <h3>Other</h3>
+                    <div class="control-item"><kbd>↑</kbd><kbd>↓</kbd> Climber</div>
+                    <div class="control-item"><kbd>P</kbd> Pickup Coral</div>
+                    <div class="control-item"><kbd>Esc</kbd> Reset Robot</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
