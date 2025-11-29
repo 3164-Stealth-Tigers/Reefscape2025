@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'team3164'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Lightweight HTTP server with WebSocket support
+    implementation 'io.javalin:javalin:6.3.0'
+
+    // JSON serialization
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-simple:2.0.13'
+}
+
+application {
+    mainClass = 'team3164.simulator.Main'
+}
+
+shadowJar {
+    archiveBaseName.set('reefscape-sim')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+
+    manifest {
+        attributes 'Main-Class': 'team3164.simulator.Main'
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'team3164.simulator.Main'
+    }
+}
+
+tasks.named('run') {
+    standardInput = System.in
+}
