@@ -4,6 +4,369 @@ A progressive guide to learn Java by working with our robot code. Each section b
 
 ---
 
+# Getting Started from Scratch
+
+This section will help you set up everything you need to start programming in Java on your Windows PC. Follow each step carefully!
+
+---
+
+## Step 1: Install Java JDK (Java Development Kit)
+
+The JDK is the software that lets you write and run Java programs. We'll install **JDK 17** which is the recommended version for FRC.
+
+### 1.1 Download the JDK
+
+1. Open your web browser (Chrome, Edge, Firefox, etc.)
+2. Go to: **https://adoptium.net/**
+3. You should see a big download button. Make sure it says:
+   - **Temurin 17** (or the latest LTS version)
+   - **Windows x64**
+   - **.msi** (installer)
+4. Click the download button
+
+If the website doesn't automatically detect Windows, click on "Other platforms" and select:
+- Operating System: **Windows**
+- Architecture: **x64**
+- Package Type: **JDK**
+- Version: **17 - LTS**
+
+### 1.2 Install the JDK
+
+1. Find the downloaded file (usually in your Downloads folder)
+   - It will be named something like `OpenJDK17U-jdk_x64_windows_hotspot_17.0.x.msi`
+2. Double-click the file to run the installer
+3. If Windows asks "Do you want to allow this app to make changes?" click **Yes**
+4. The installer wizard will open. Click **Next**
+5. On the "Custom Setup" screen, make sure these options are checked:
+   - ✅ Add to PATH
+   - ✅ Set JAVA_HOME variable
+   - ✅ JavaSoft (Oracle) registry keys
+6. Click **Next**, then click **Install**
+7. Wait for the installation to complete
+8. Click **Finish**
+
+### 1.3 Verify Java is Installed
+
+1. Press the **Windows key** on your keyboard
+2. Type **cmd** and press Enter (this opens Command Prompt)
+3. In the black window that appears, type:
+   ```
+   java -version
+   ```
+4. Press Enter
+5. You should see something like:
+   ```
+   openjdk version "17.0.9" 2023-10-17
+   OpenJDK Runtime Environment Temurin-17.0.9+9 (build 17.0.9+9)
+   OpenJDK 64-Bit Server VM Temurin-17.0.9+9 (build 17.0.9+9, mixed mode, sharing)
+   ```
+6. Now type:
+   ```
+   javac -version
+   ```
+7. Press Enter. You should see:
+   ```
+   javac 17.0.9
+   ```
+
+**If you see an error** like "'java' is not recognized":
+- Restart your computer and try again
+- If it still doesn't work, the PATH wasn't set correctly. Ask a mentor for help.
+
+---
+
+## Step 2: Install IntelliJ IDEA
+
+IntelliJ IDEA is an IDE (Integrated Development Environment) - a program that helps you write code. It provides helpful features like code completion, error highlighting, and easy project management.
+
+### 2.1 Download IntelliJ IDEA Community Edition
+
+1. Go to: **https://www.jetbrains.com/idea/download/**
+2. Scroll down to find **IntelliJ IDEA Community Edition** (the FREE version)
+   - **Important:** Don't download the Ultimate version - it's not free!
+   - The Community edition is on the RIGHT side of the page
+3. Click the **Download** button under "Community"
+4. Wait for the download to complete (it's about 500-700 MB)
+
+### 2.2 Install IntelliJ IDEA
+
+1. Find the downloaded file (something like `ideaIC-2024.x.x.exe`)
+2. Double-click to run the installer
+3. If Windows asks for permission, click **Yes**
+4. Click **Next** on the welcome screen
+5. Choose the installation location (the default is fine) and click **Next**
+6. On the "Installation Options" screen, check these boxes:
+   - ✅ 64-bit launcher (creates a desktop shortcut)
+   - ✅ Add "Open Folder as Project" (helpful for opening projects)
+   - ✅ .java (associates Java files with IntelliJ)
+   - ✅ Add launchers dir to the PATH
+7. Click **Next**
+8. Click **Install**
+9. Wait for the installation to complete
+10. Check "Run IntelliJ IDEA Community Edition" and click **Finish**
+
+### 2.3 First-Time Setup
+
+When IntelliJ opens for the first time:
+
+1. You'll see "Import IntelliJ IDEA Settings"
+   - Select **"Do not import settings"** and click **OK**
+2. Accept the User Agreement and click **Continue**
+3. Choose whether to send anonymous usage statistics (your choice)
+4. You'll see the Welcome screen - you're ready to create your first project!
+
+---
+
+## Step 3: Create Your First Java Program (Hello World!)
+
+Now let's write your first Java program that prints "Hello, World!" to the screen.
+
+### 3.1 Create a New Project
+
+1. On the IntelliJ Welcome screen, click **"New Project"**
+2. On the left side, make sure **"Java"** is selected
+3. Configure your project:
+   - **Name:** `HelloWorld`
+   - **Location:** Leave as default, or choose a folder you'll remember (like Documents)
+   - **JDK:** Click the dropdown and select **17** (or "temurin-17")
+     - If you don't see it, click "Download JDK" and select version 17
+   - Leave other options as default
+4. Click **Create**
+5. If asked about creating a sample application, click **Yes** or just proceed
+
+### 3.2 Create the Main Class
+
+1. In the left panel, you'll see your project structure:
+   ```
+   HelloWorld
+   └── src
+   ```
+2. Right-click on the **src** folder
+3. Select **New** → **Java Class**
+4. Type `Main` for the name and press Enter
+5. IntelliJ creates a new file with this code:
+   ```java
+   public class Main {
+   }
+   ```
+
+### 3.3 Write the Hello World Code
+
+1. Click inside the curly braces `{ }` after `public class Main`
+2. Add a new line and type this code exactly:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+**Let's break down what each part means:**
+
+| Code | What It Means |
+|------|---------------|
+| `public class Main` | Creates a class named "Main" (the container for our code) |
+| `public static void main(String[] args)` | The main method - where the program starts running |
+| `System.out.println("Hello, World!");` | Prints text to the screen |
+| `{ }` | Curly braces group code together (like Python's indentation) |
+| `;` | Semicolon ends each statement (required in Java!) |
+
+### 3.4 Run Your Program
+
+**Method 1: Using the Green Play Button**
+1. Look at the left margin next to line 1 or line 2
+2. You'll see a small green **▶** (play) icon
+3. Click on it
+4. Select **"Run 'Main.main()'"**
+
+**Method 2: Using the Keyboard**
+1. Press **Ctrl + Shift + F10** (or **Shift + F10** if main was already run)
+
+**Method 3: Using the Menu**
+1. Click **Run** in the top menu
+2. Click **Run 'Main'**
+
+### 3.5 See the Output
+
+After running, look at the bottom of the IntelliJ window. A "Run" panel will appear showing:
+```
+Hello, World!
+
+Process finished with exit code 0
+```
+
+**Congratulations!** 🎉 You've written and run your first Java program!
+
+---
+
+## Step 4: Try Some Experiments
+
+Now let's modify the program to learn more. Try each of these:
+
+### Experiment 1: Change the Message
+
+Change the text inside the quotes and run again:
+```java
+System.out.println("Go Stealth Tigers!");
+```
+
+### Experiment 2: Print Multiple Lines
+
+Add more print statements:
+```java
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+        System.out.println("My name is [Your Name]");
+        System.out.println("I'm learning Java!");
+    }
+}
+```
+
+### Experiment 3: Use Variables
+
+Store values in variables and print them:
+```java
+public class Main {
+    public static void main(String[] args) {
+        String teamName = "Stealth Tigers";
+        int teamNumber = 3164;
+
+        System.out.println("Team: " + teamName);
+        System.out.println("Number: " + teamNumber);
+    }
+}
+```
+
+### Experiment 4: Do Some Math
+
+Java can do calculations:
+```java
+public class Main {
+    public static void main(String[] args) {
+        int a = 10;
+        int b = 5;
+
+        System.out.println("a + b = " + (a + b));
+        System.out.println("a - b = " + (a - b));
+        System.out.println("a * b = " + (a * b));
+        System.out.println("a / b = " + (a / b));
+    }
+}
+```
+
+### Experiment 5: Ask for Input
+
+Get input from the user:
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("What is your name? ");
+        String name = scanner.nextLine();
+
+        System.out.println("Hello, " + name + "!");
+
+        scanner.close();
+    }
+}
+```
+
+---
+
+## Common Errors and How to Fix Them
+
+### Error: "Cannot resolve symbol"
+- **Cause:** You misspelled something or forgot to import a class
+- **Fix:** Check your spelling carefully. Java is case-sensitive!
+  - `String` is correct, `string` is wrong
+  - `System` is correct, `system` is wrong
+
+### Error: "';' expected"
+- **Cause:** You forgot a semicolon at the end of a line
+- **Fix:** Add `;` at the end of the statement
+
+### Error: "class, interface, or enum expected"
+- **Cause:** Code is outside the class braces
+- **Fix:** Make sure all your code is inside `public class Main { }`
+
+### Error: "'java' is not recognized"
+- **Cause:** Java wasn't added to your PATH during installation
+- **Fix:** Reinstall Java and make sure to check "Add to PATH"
+
+### Error: Red underlines everywhere
+- **Cause:** Usually a missing brace `{` or `}`
+- **Fix:** Count your opening and closing braces - they must match!
+
+### The program runs but nothing happens
+- **Cause:** You might not have the `main` method, or it's spelled wrong
+- **Fix:** Make sure you have exactly: `public static void main(String[] args)`
+
+---
+
+## Helpful IntelliJ Shortcuts
+
+| Shortcut | What It Does |
+|----------|-------------|
+| `Ctrl + Space` | Show code suggestions (autocomplete) |
+| `Ctrl + Shift + F10` | Run current file |
+| `Shift + F10` | Run last configuration |
+| `Ctrl + /` | Comment/uncomment a line |
+| `Ctrl + D` | Duplicate current line |
+| `Ctrl + Z` | Undo |
+| `Ctrl + Shift + Z` | Redo |
+| `Ctrl + S` | Save file |
+| `Alt + Enter` | Show quick fixes for errors |
+| `Ctrl + Alt + L` | Format code nicely |
+| `sout` + Tab | Quickly type `System.out.println()` |
+| `psvm` + Tab | Quickly type `public static void main(String[] args)` |
+
+---
+
+## IntelliJ Tips for Beginners
+
+### Live Templates (Shortcuts for Common Code)
+
+Instead of typing everything out, IntelliJ has shortcuts:
+
+1. Type `sout` and press **Tab** → expands to `System.out.println();`
+2. Type `psvm` and press **Tab** → expands to `public static void main(String[] args) { }`
+3. Type `fori` and press **Tab** → creates a for loop template
+
+### Auto-Import
+
+If you use a class that needs an import (like `Scanner`):
+1. Type the class name
+2. It will be underlined red
+3. Press **Alt + Enter**
+4. Select "Import class"
+
+### Code Completion
+
+1. Start typing anything
+2. Press **Ctrl + Space** to see suggestions
+3. Use arrow keys to select and press **Enter**
+
+---
+
+## What's Next?
+
+Now that you have Java and IntelliJ set up, continue with the rest of this guide to learn:
+
+1. **Variables and Types** - Storing different kinds of data
+2. **If Statements** - Making decisions in code
+3. **Loops** - Repeating actions
+4. **Methods** - Creating reusable code blocks
+5. **Classes** - Organizing code into objects
+6. **FRC Concepts** - Subsystems, Commands, and robot programming!
+
+---
+
 ## How to Use This Guide
 
 1. Read each section in order
