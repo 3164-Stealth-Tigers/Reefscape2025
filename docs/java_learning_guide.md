@@ -281,7 +281,28 @@ public class Main {
 
 ## Common Errors and How to Fix Them
 
-### Error: "Cannot resolve symbol"
+### Error: "Cannot resolve symbol 'String'" or "Cannot resolve symbol 'System'"
+- **Cause:** The JDK is not configured in your IntelliJ project
+- **Fix:** You need to tell IntelliJ where Java is installed:
+  1. Go to **File** → **Project Structure** (or press `Ctrl + Alt + Shift + S`)
+  2. In the left panel, click **Project**
+  3. Look at the **SDK** dropdown at the top
+     - If it says `<No SDK>`, click the dropdown
+     - Select **17** (temurin-17) or any version 17
+     - If no JDK appears in the list, click **Add SDK** → **Download JDK**
+       - Version: **17**
+       - Vendor: **Eclipse Temurin** (or any vendor)
+       - Click **Download**
+  4. Click **Apply**, then **OK**
+  5. Wait a moment for IntelliJ to index the project
+  6. The red errors should disappear!
+
+**Alternative quick fix:**
+1. Look at the bottom-right corner of IntelliJ
+2. If you see "No SDK" or a warning icon, click it
+3. Select **Setup SDK** → choose version 17
+
+### Error: "Cannot resolve symbol" (other symbols)
 - **Cause:** You misspelled something or forgot to import a class
 - **Fix:** Check your spelling carefully. Java is case-sensitive!
   - `String` is correct, `string` is wrong
