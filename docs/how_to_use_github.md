@@ -35,7 +35,7 @@ Click "Next" on most screens, but pay attention to these settings:
 
 | Screen | Recommended Setting |
 |--------|---------------------|
-| Default editor | Select "Use Visual Studio Code" (if you have it) |
+| Default editor | Select "Use IntelliJ" or leave as default |
 | Initial branch name | Choose "Override" and type `main` |
 | PATH environment | Choose "Git from the command line and also from 3rd-party software" |
 | Everything else | Use the defaults (just click Next) |
@@ -145,15 +145,17 @@ git checkout -b john/fix-elevator-speed
 
 ## Step 6: Make Your Changes
 
-Now you can edit the code! Use your code editor (VS Code recommended).
+Now you can edit the code! Use IntelliJ IDEA as your code editor.
 
-### Open the Project in VS Code
+### Open the Project in IntelliJ
 
-```
-code .
-```
+1. Open IntelliJ IDEA
+2. Click **File > Open** (or "Open" on the Welcome screen)
+3. Navigate to the `Reefscape2025` folder and select it
+4. Click **OK**
+5. If prompted, click **Trust Project**
 
-Or open VS Code and use File > Open Folder to select the Reefscape2025 folder.
+IntelliJ will index the files - wait for the progress bar at the bottom to finish.
 
 ### Make a Simple Change
 
@@ -354,7 +356,7 @@ git checkout new-branch-name
 2. git checkout -b my-branch   (create your branch)
          |
          v
-3. [Make your changes in VS Code]
+3. [Make your changes in IntelliJ]
          |
          v
 4. git add .                   (stage changes)
