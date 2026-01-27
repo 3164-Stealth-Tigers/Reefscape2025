@@ -209,6 +209,7 @@ public class Superstructure {
             elevator.atGoalHeight() &&
 
             // 6. Arm has reached the target scoring angle
+            // sam was here ;)
             coralArm.atGoalRotation()
         );
 
